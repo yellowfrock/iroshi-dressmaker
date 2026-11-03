@@ -4,7 +4,36 @@
  * The service role key is only used in server-side admin operations.
  */
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+
+let publicClientInstance: ReturnType<typeof createSupabaseClient> | null = null
+
+/**
+ * Public server client — uses the anon key directly WITHOUT cookies.
+ * Does NOT trigger dynamic rendering or cookies() opt-out in Next.js.
+ * Safe and performant for all read-only public queries and static/ISR pages.
+ */
+export function createPublicClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+  if (!url || !key) {
+    return createSupabaseClient(url, key)
+  }
+
+  if (!publicClientInstance) {
+    publicClientInstance = createSupabaseClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    })
+  }
+
+  return publicClientInstance
+}
 
 /**
  * Standard server client — uses the anon key with RLS enforced.

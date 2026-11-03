@@ -355,98 +355,7 @@ export default function TheSequenceHomepage({
 
   const TOTAL_FRAMES = sequence360Config.FRAME_COUNT || 300
 
-  // 1. High Performance Preloader (Local first with Cloudinary fallback)
-  useEffect(() => {
-    let isCancelled = false
-
-    const loadFrame = (idx: number): Promise<HTMLImageElement | null> => {
-      if (imagesCache.current.has(idx)) {
-        return Promise.resolve(imagesCache.current.get(idx)!)
-      }
-
-      return new Promise((resolve) => {
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-
-        img.onload = () => {
-          if (!isCancelled) {
-            imagesCache.current.set(idx, img)
-            if (idx === 1 || Math.round(targetFrame.current) === idx) {
-              drawFrame(idx)
-            }
-          }
-          resolve(img)
-        }
-
-        img.onerror = () => {
-          // Cloudinary fallback
-          const fallbackUrl = `https://res.cloudinary.com/ecyvwovp/image/upload/v1788579722/ezgif-frame-${String(
-            idx
-          ).padStart(3, '0')}.jpg`
-          const fallbackImg = new Image()
-          fallbackImg.crossOrigin = 'anonymous'
-          fallbackImg.onload = () => {
-            if (!isCancelled) {
-              imagesCache.current.set(idx, fallbackImg)
-              if (idx === 1 || Math.round(targetFrame.current) === idx) {
-                drawFrame(idx)
-              }
-            }
-            resolve(fallbackImg)
-          }
-          fallbackImg.onerror = () => {
-            resolve(null)
-          }
-          fallbackImg.src = fallbackUrl
-        }
-
-        img.src = `/360-frames/${getFrameFilename(idx)}`
-      })
-    }
-
-    async function preloadAll() {
-      // Step A: Immediate first frame
-      await loadFrame(1)
-      if (isCancelled) return
-      drawFrame(1)
-
-      // Step B: Immediate next 9 frames for fast initial scroll
-      const firstTen = [2, 3, 4, 5, 6, 7, 8, 9, 10]
-      await Promise.all(firstTen.map(loadFrame))
-      if (isCancelled) return
-
-      // Step C: Keyframes across the sequence
-      const keyframes = [25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300]
-      await Promise.all(
-        keyframes.map((k) => (imagesCache.current.has(k) ? Promise.resolve(null) : loadFrame(k)))
-      )
-      if (isCancelled) return
-
-      // Step D: Remaining frames in chunks of 12
-      const remaining: number[] = []
-      for (let i = 1; i <= TOTAL_FRAMES; i++) {
-        if (!imagesCache.current.has(i)) remaining.push(i)
-      }
-
-      const batchSize = 12
-      for (let i = 0; i < remaining.length && !isCancelled; i += batchSize) {
-        const chunk = remaining.slice(i, i + batchSize)
-        await Promise.all(chunk.map(loadFrame))
-      }
-
-      if (!isCancelled) {
-        drawFrame(targetFrame.current)
-      }
-    }
-
-    preloadAll()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [TOTAL_FRAMES])
-
-  // 2. High performance Canvas Rendering (with exact Netlify scaling & fallback)
+  // 1. High performance Canvas Rendering (with exact Netlify scaling & fallback)
   const drawFrame = useCallback(
     (frameNum: number) => {
       const canvas = canvasRef.current
@@ -529,6 +438,145 @@ export default function TheSequenceHomepage({
     [TOTAL_FRAMES]
   )
 
+  // Track whether local /360-frames/ are available (set to false after first 404 to eliminate redundant requests)
+  const localFramesAvailableRef = useRef<boolean | null>(null)
+  const loadingFramesRef = useRef<Set<number>>(new Set())
+
+  // Fast single-frame loader with instant Cloudinary fallback
+  const loadFrame = useCallback(
+    (idx: number): Promise<HTMLImageElement | null> => {
+      if (imagesCache.current.has(idx)) {
+        return Promise.resolve(imagesCache.current.get(idx)!)
+      }
+      if (loadingFramesRef.current.has(idx)) {
+        return Promise.resolve(null)
+      }
+      loadingFramesRef.current.add(idx)
+
+      const cloudinaryUrl = `https://res.cloudinary.com/ecyvwovp/image/upload/v1788579722/ezgif-frame-${String(
+        idx
+      ).padStart(3, '0')}.jpg`
+
+      return new Promise((resolve) => {
+        // If we already know local frames are not available on this host, go straight to Cloudinary
+        if (localFramesAvailableRef.current === false) {
+          const cImg = new Image()
+          cImg.crossOrigin = 'anonymous'
+          cImg.onload = () => {
+            loadingFramesRef.current.delete(idx)
+            imagesCache.current.set(idx, cImg)
+            if (idx === 1 || Math.round(targetFrame.current) === idx) {
+              drawFrame(idx)
+            }
+            resolve(cImg)
+          }
+          cImg.onerror = () => {
+            loadingFramesRef.current.delete(idx)
+            resolve(null)
+          }
+          cImg.src = cloudinaryUrl
+          return
+        }
+
+        // Try local first
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+
+        img.onload = () => {
+          localFramesAvailableRef.current = true
+          loadingFramesRef.current.delete(idx)
+          imagesCache.current.set(idx, img)
+          if (idx === 1 || Math.round(targetFrame.current) === idx) {
+            drawFrame(idx)
+          }
+          resolve(img)
+        }
+
+        img.onerror = () => {
+          // Immediately mark local as unavailable so frames 2..300 NEVER waste time testing /360-frames/!
+          localFramesAvailableRef.current = false
+
+          const fallbackImg = new Image()
+          fallbackImg.crossOrigin = 'anonymous'
+          fallbackImg.onload = () => {
+            loadingFramesRef.current.delete(idx)
+            imagesCache.current.set(idx, fallbackImg)
+            if (idx === 1 || Math.round(targetFrame.current) === idx) {
+              drawFrame(idx)
+            }
+            resolve(fallbackImg)
+          }
+          fallbackImg.onerror = () => {
+            loadingFramesRef.current.delete(idx)
+            resolve(null)
+          }
+          fallbackImg.src = cloudinaryUrl
+        }
+
+        img.src = `/360-frames/${getFrameFilename(idx)}`
+      })
+    },
+    [drawFrame]
+  )
+
+  // Preload frames in the immediate window around target frame
+  const loadNearbyFrames = useCallback(
+    (currentCenter: number) => {
+      const center = Math.round(currentCenter)
+      const targets = [center - 2, center - 1, center, center + 1, center + 2]
+      for (const t of targets) {
+        if (t >= 1 && t <= TOTAL_FRAMES && !imagesCache.current.has(t)) {
+          loadFrame(t)
+        }
+      }
+    },
+    [TOTAL_FRAMES, loadFrame]
+  )
+
+  // 2. High Performance Progressive Preloader
+  useEffect(() => {
+    let isCancelled = false
+
+    async function initializePreloader() {
+      // Step A: Immediate first frame — load and draw right away for zero LCP delay
+      await loadFrame(1)
+      if (isCancelled) return
+      drawFrame(1)
+
+      // Step B: Load 12 sparse keyframes across the 300-frame sequence
+      // With keyframes + closest-frame interpolation, 360 rotation is already functional!
+      const keyframes = [25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300]
+      for (const k of keyframes) {
+        if (isCancelled) return
+        await loadFrame(k)
+      }
+
+      // Step C: Delay loading remaining non-essential frames until main page elements settle
+      await new Promise((r) => setTimeout(r, 2000))
+      if (isCancelled) return
+
+      // Step D: Lazily fill in remaining frames in gentle background batches
+      const remaining: number[] = []
+      for (let i = 2; i <= TOTAL_FRAMES; i++) {
+        if (!imagesCache.current.has(i)) remaining.push(i)
+      }
+
+      const batchSize = 6
+      for (let i = 0; i < remaining.length && !isCancelled; i += batchSize) {
+        const chunk = remaining.slice(i, i + batchSize)
+        await Promise.all(chunk.map((idx) => loadFrame(idx)))
+        // 120ms pause between batches prevents browser network/thread congestion
+        await new Promise((r) => setTimeout(r, 120))
+      }
+    }
+
+    initializePreloader()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [TOTAL_FRAMES, loadFrame, drawFrame])
+
   // 3. Animation loop with smooth dampening (0.3 lerp factor)
   useEffect(() => {
     let running = true
@@ -599,6 +647,7 @@ export default function TheSequenceHomepage({
         const frame = Math.round(1 + progress * (TOTAL_FRAMES - 1))
 
         targetFrame.current = frame
+        loadNearbyFrames(frame)
       })
 
       isScrollingRef.current = true
@@ -638,7 +687,7 @@ export default function TheSequenceHomepage({
       if (scrollRafId !== null) cancelAnimationFrame(scrollRafId)
       if (scrollTimeoutRef.current) window.clearTimeout(scrollTimeoutRef.current)
     }
-  }, [TOTAL_FRAMES])
+  }, [TOTAL_FRAMES, loadNearbyFrames])
 
   // 6. Mouse movement scrubbing across hero section
   const handleHeroMouseMove = useCallback(
@@ -649,8 +698,9 @@ export default function TheSequenceHomepage({
       const progress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
       const frame = Math.round(1 + progress * (TOTAL_FRAMES - 1))
       targetFrame.current = frame
+      loadNearbyFrames(frame)
     },
-    [TOTAL_FRAMES]
+    [TOTAL_FRAMES, loadNearbyFrames]
   )
 
   // 7. Touch swipe scrubbing
@@ -669,11 +719,13 @@ export default function TheSequenceHomepage({
       const dy = clientY - touchStartRef.current.y
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         const delta = dx * 0.75 - dy * 0.4
-        targetFrame.current = Math.max(1, Math.min(TOTAL_FRAMES, targetFrame.current + delta))
+        const next = Math.max(1, Math.min(TOTAL_FRAMES, targetFrame.current + delta))
+        targetFrame.current = next
+        loadNearbyFrames(next)
         touchStartRef.current = { x: clientX, y: clientY }
       }
     },
-    [TOTAL_FRAMES]
+    [TOTAL_FRAMES, loadNearbyFrames]
   )
 
   const handleTouchEnd = () => {
@@ -730,7 +782,7 @@ export default function TheSequenceHomepage({
           <source media="(max-width: 768px)" srcSet="/images/hero-mobile.png" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/360-frames/ezgif-frame-001.jpg"
+            src="https://res.cloudinary.com/ecyvwovp/image/upload/v1788579722/ezgif-frame-001.jpg"
             alt="Iroshi Dressmaker"
             className="w-full h-full object-cover"
             fetchPriority="high"

@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
 import { siteConfig } from '@/config/site'
 import { getWhatsAppUrl } from '@/lib/whatsapp'
 import {
+  getSiteSettings,
   getPortfolioBackground,
   getLatestCollectionItems,
   getSareeCollectionItems,
 } from '@/lib/supabase/queries'
 import PortfolioShowcase from '@/components/portfolio/PortfolioShowcase'
+
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Our Portfolio | Iroshi Dressmaker — Haute Couture Archive & Bridal Masterpieces',
@@ -22,16 +24,14 @@ export const metadata: Metadata = {
 }
 
 export default async function PortfolioPage() {
-  const supabase = await createClient()
-
-  // Fetch settings, portfolio background, latest collection, and saree collection in parallel
+  // Fetch settings, portfolio background, latest collection, and saree collection concurrently
   const [
-    { data: settings },
+    settings,
     portfolioBg,
     latestCollectionItems,
     sareeCollectionItems,
   ] = await Promise.all([
-    supabase.from('site_settings').select('whatsapp_number').limit(1).maybeSingle(),
+    getSiteSettings(),
     getPortfolioBackground(),
     getLatestCollectionItems(),
     getSareeCollectionItems(),

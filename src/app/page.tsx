@@ -16,24 +16,30 @@ export const metadata: Metadata = {
   },
 }
 
+export const revalidate = 60
+
 export default async function HomePage() {
-  const settings = await getSiteSettings()
-  const whatsappNumber = settings?.whatsapp_number || siteConfig.placeholders.whatsappNumber || '94771234567'
+  const [settings, bridalDressesDb, rentalDressesDb, featuredImages, latestCollectionItems] =
+    await Promise.all([
+      getSiteSettings(),
+      getFeaturedDresses('bridal', 4),
+      getFeaturedDresses('rental', 8),
+      getFeaturedImages(),
+      getLatestCollectionItems(),
+    ])
 
-  let bridalDresses = await getFeaturedDresses('bridal', 4)
-  if (!bridalDresses || bridalDresses.length === 0) {
-    bridalDresses = sampleDresses.filter((d) => d.category?.slug === 'bridal')
-  }
+  const whatsappNumber =
+    settings?.whatsapp_number || siteConfig.placeholders.whatsappNumber || '94771234567'
 
-  let rentalDresses = await getFeaturedDresses('rental', 8)
-  if (!rentalDresses || rentalDresses.length === 0) {
-    rentalDresses = sampleDresses.filter((d) => d.category?.slug === 'rental')
-  }
+  const bridalDresses =
+    bridalDressesDb && bridalDressesDb.length > 0
+      ? bridalDressesDb
+      : sampleDresses.filter((d) => d.category?.slug === 'bridal')
 
-  const [featuredImages, latestCollectionItems] = await Promise.all([
-    getFeaturedImages(),
-    getLatestCollectionItems(),
-  ])
+  const rentalDresses =
+    rentalDressesDb && rentalDressesDb.length > 0
+      ? rentalDressesDb
+      : sampleDresses.filter((d) => d.category?.slug === 'rental')
 
   return (
     <TheSequenceHomepage

@@ -11,15 +11,19 @@ export const metadata: Metadata = {
     'Discover luxury designer evening gowns, reception dresses, and gala silhouettes available for rental. Check availability and reserve your date via WhatsApp.',
 }
 
+export const revalidate = 60
+
 export default async function RentalCollectionPage() {
-  let dresses = await getDressesByCategory('rental')
+  const [dressesDb, settings] = await Promise.all([
+    getDressesByCategory('rental'),
+    getSiteSettings(),
+  ])
 
   // Fallback to sample rental dresses if DB is empty
-  if (!dresses || dresses.length === 0) {
-    dresses = sampleDresses.filter((d) => d.category?.slug === 'rental')
-  }
-
-  const settings = await getSiteSettings()
+  const dresses =
+    dressesDb && dressesDb.length > 0
+      ? dressesDb
+      : sampleDresses.filter((d) => d.category?.slug === 'rental')
   const whatsappNumber =
     settings?.whatsapp_number || siteConfig.placeholders.whatsappNumber || '94769750186'
   const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(

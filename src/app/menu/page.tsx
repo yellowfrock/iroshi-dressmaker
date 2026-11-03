@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { getPortfolioBackground } from '@/lib/supabase/queries'
 import MenuClient from './MenuClient'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Menu | Iroshi Dressmaker',

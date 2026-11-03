@@ -12,6 +12,8 @@ interface PageProps {
   params: Promise<{ code: string }>
 }
 
+export const revalidate = 60
+
 export async function generateStaticParams() {
   const codes = await getAllDressCodes()
   const sampleCodes = sampleDresses.map((d) => d.dress_code)

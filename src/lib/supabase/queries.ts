@@ -1,13 +1,23 @@
 /**
  * Database query functions for Iroshi Dress Maker.
  *
- * All data access goes through these functions — never write raw Supabase
- * queries directly in components.
+ * Performance-optimized:
+ * - Uses `createPublicClient` (no cookies opt-out, enables ISR & edge caching)
+ * - Cached via Next.js `unstable_cache` with revalidation tags
  *
  * Server-side use only (import in Server Components or Route Handlers).
  */
-import { createClient } from '@/lib/supabase/server'
-import type { Category, Dress, DressImage, FeaturedImage, LatestCollectionImage, CollectionItem, PortfolioBackground, SiteSettings } from '@/types'
+import { unstable_cache } from 'next/cache'
+import { createPublicClient } from '@/lib/supabase/server'
+import type {
+  Category,
+  Dress,
+  DressImage,
+  FeaturedImage,
+  CollectionItem,
+  PortfolioBackground,
+  SiteSettings,
+} from '@/types'
 import { PORTFOLIO_COLLECTION, type PortfolioItem } from '@/data/portfolio-items'
 
 /** Check if Supabase environment variables are properly configured. */
@@ -23,219 +33,246 @@ export function isSupabaseConfigured(): boolean {
 
 /**
  * Fetch the single site_settings row.
- * Returns null if not configured yet.
+ * Cached for 60 seconds.
  */
-export async function getSiteSettings(): Promise<SiteSettings | null> {
-  if (!isSupabaseConfigured()) return null
+export const getSiteSettings = unstable_cache(
+  async (): Promise<SiteSettings | null> => {
+    if (!isSupabaseConfigured()) return null
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('site_settings')
-      .select('*')
-      .limit(1)
-      .maybeSingle()
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle()
 
-    if (error) {
-      console.warn('[getSiteSettings] error:', error.message)
+      if (error) {
+        console.warn('[getSiteSettings] error:', error.message)
+        return null
+      }
+      return data
+    } catch {
       return null
     }
-    return data
-  } catch {
-    return null
-  }
-}
+  },
+  ['site_settings_cache'],
+  { revalidate: 60, tags: ['site_settings'] }
+)
 
 // ---------------------------------------------------------------------------
 // CATEGORIES
 // ---------------------------------------------------------------------------
 
-/** Fetch all categories. */
-export async function getCategories(): Promise<Category[]> {
-  if (!isSupabaseConfigured()) return []
+/** Fetch all categories. Cached for 120 seconds. */
+export const getCategories = unstable_cache(
+  async (): Promise<Category[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name')
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name')
 
-    if (error) {
-      console.warn('[getCategories] error:', error.message)
+      if (error) {
+        console.warn('[getCategories] error:', error.message)
+        return []
+      }
+      return data ?? []
+    } catch {
       return []
     }
-    return data ?? []
-  } catch {
-    return []
-  }
-}
+  },
+  ['categories_cache'],
+  { revalidate: 120, tags: ['categories'] }
+)
 
 /** Fetch a single category by slug. */
-export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  if (!isSupabaseConfigured()) return null
+export const getCategoryBySlug = unstable_cache(
+  async (slug: string): Promise<Category | null> => {
+    if (!isSupabaseConfigured()) return null
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('slug', slug)
-      .maybeSingle()
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('slug', slug)
+        .maybeSingle()
 
-    if (error) {
-      console.warn('[getCategoryBySlug] error:', error.message)
+      if (error) {
+        console.warn('[getCategoryBySlug] error:', error.message)
+        return null
+      }
+      return data
+    } catch {
       return null
     }
-    return data
-  } catch {
-    return null
-  }
-}
+  },
+  ['category_by_slug_cache'],
+  { revalidate: 120, tags: ['categories'] }
+)
 
 // ---------------------------------------------------------------------------
 // DRESSES
 // ---------------------------------------------------------------------------
 
 /** Fetch featured dresses for the homepage (active dresses, by category). */
-export async function getFeaturedDresses(
-  categorySlug: string,
-  limit = 3
-): Promise<Dress[]> {
-  if (!isSupabaseConfigured()) return []
+export const getFeaturedDresses = unstable_cache(
+  async (categorySlug: string, limit = 3): Promise<Dress[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
+    try {
+      const supabase = createPublicClient()
+      const category = await getCategoryBySlug(categorySlug)
+      if (!category) return []
 
-    const category = await getCategoryBySlug(categorySlug)
-    if (!category) return []
+      const { data, error } = await supabase
+        .from('dresses')
+        .select(`
+          *,
+          category:categories(*),
+          images:dress_images(*)
+        `)
+        .eq('category_id', category.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(limit)
 
-    const { data, error } = await supabase
-      .from('dresses')
-      .select(`
-        *,
-        category:categories(*),
-        images:dress_images(*)
-      `)
-      .eq('category_id', category.id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-
-    if (error) {
-      console.warn('[getFeaturedDresses] error:', error.message)
+      if (error) {
+        console.warn('[getFeaturedDresses] error:', error.message)
+        return []
+      }
+      return (data ?? []) as Dress[]
+    } catch {
       return []
     }
-    return (data ?? []) as Dress[]
-  } catch {
-    return []
-  }
-}
+  },
+  ['featured_dresses_cache'],
+  { revalidate: 60, tags: ['dresses'] }
+)
 
 /** Fetch all active dresses in a category. */
-export async function getDressesByCategory(categorySlug: string): Promise<Dress[]> {
-  if (!isSupabaseConfigured()) return []
+export const getDressesByCategory = unstable_cache(
+  async (categorySlug: string): Promise<Dress[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
+    try {
+      const supabase = createPublicClient()
+      const category = await getCategoryBySlug(categorySlug)
+      if (!category) return []
 
-    const category = await getCategoryBySlug(categorySlug)
-    if (!category) return []
+      const { data, error } = await supabase
+        .from('dresses')
+        .select(`
+          *,
+          category:categories(*),
+          images:dress_images(*)
+        `)
+        .eq('category_id', category.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
 
-    const { data, error } = await supabase
-      .from('dresses')
-      .select(`
-        *,
-        category:categories(*),
-        images:dress_images(*)
-      `)
-      .eq('category_id', category.id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.warn('[getDressesByCategory] error:', error.message)
+      if (error) {
+        console.warn('[getDressesByCategory] error:', error.message)
+        return []
+      }
+      return (data ?? []) as Dress[]
+    } catch {
       return []
     }
-    return (data ?? []) as Dress[]
-  } catch {
-    return []
-  }
-}
+  },
+  ['dresses_by_category_cache'],
+  { revalidate: 60, tags: ['dresses'] }
+)
 
 /** Fetch a single dress by dress_code. */
-export async function getDressByCode(dressCode: string): Promise<Dress | null> {
-  if (!isSupabaseConfigured()) return null
+export const getDressByCode = unstable_cache(
+  async (dressCode: string): Promise<Dress | null> => {
+    if (!isSupabaseConfigured()) return null
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('dresses')
-      .select(`
-        *,
-        category:categories(*),
-        images:dress_images(*)
-      `)
-      .eq('dress_code', dressCode)
-      .eq('is_active', true)
-      .maybeSingle()
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('dresses')
+        .select(`
+          *,
+          category:categories(*),
+          images:dress_images(*)
+        `)
+        .eq('dress_code', dressCode)
+        .eq('is_active', true)
+        .maybeSingle()
 
-    if (error) {
-      console.warn('[getDressByCode] error:', error.message)
+      if (error) {
+        console.warn('[getDressByCode] error:', error.message)
+        return null
+      }
+      return data as Dress | null
+    } catch {
       return null
     }
-    return data as Dress | null
-  } catch {
-    return null
-  }
-}
+  },
+  ['dress_by_code_cache'],
+  { revalidate: 60, tags: ['dresses'] }
+)
 
 /** Fetch all dress codes (for static path generation). */
-export async function getAllDressCodes(): Promise<string[]> {
-  if (!isSupabaseConfigured()) return []
+export const getAllDressCodes = unstable_cache(
+  async (): Promise<string[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('dresses')
-      .select('dress_code')
-      .eq('is_active', true)
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('dresses')
+        .select('dress_code')
+        .eq('is_active', true)
 
-    if (error) {
-      console.warn('[getAllDressCodes] error:', error.message)
+      if (error) {
+        console.warn('[getAllDressCodes] error:', error.message)
+        return []
+      }
+      return (data ?? []).map((d) => d.dress_code)
+    } catch {
       return []
     }
-    return (data ?? []).map((d) => d.dress_code)
-  } catch {
-    return []
-  }
-}
+  },
+  ['all_dress_codes_cache'],
+  { revalidate: 120, tags: ['dresses'] }
+)
 
 // ---------------------------------------------------------------------------
 // DRESS IMAGES
 // ---------------------------------------------------------------------------
 
 /** Fetch all images for a dress, ordered by image_order. */
-export async function getDressImages(dressId: string): Promise<DressImage[]> {
-  if (!isSupabaseConfigured()) return []
+export const getDressImages = unstable_cache(
+  async (dressId: string): Promise<DressImage[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('dress_images')
-      .select('*')
-      .eq('dress_id', dressId)
-      .order('image_order', { ascending: true })
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('dress_images')
+        .select('*')
+        .eq('dress_id', dressId)
+        .order('image_order', { ascending: true })
 
-    if (error) {
-      console.warn('[getDressImages] error:', error.message)
+      if (error) {
+        console.warn('[getDressImages] error:', error.message)
+        return []
+      }
+      return data ?? []
+    } catch {
       return []
     }
-    return data ?? []
-  } catch {
-    return []
-  }
-}
+  },
+  ['dress_images_cache'],
+  { revalidate: 120, tags: ['dress_images'] }
+)
 
 /** Get the primary (lowest image_order) image URL for a dress. */
 export function getPrimaryImageUrl(images: DressImage[]): string | null {
@@ -252,29 +289,33 @@ export function getPrimaryImageUrl(images: DressImage[]): string | null {
  * Fetch all active featured images for the homepage hero rotation.
  * Returns empty array if table doesn't exist yet or has no rows.
  */
-export async function getFeaturedImages(): Promise<FeaturedImage[]> {
-  if (!isSupabaseConfigured()) return []
+export const getFeaturedImages = unstable_cache(
+  async (): Promise<FeaturedImage[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('featured_images')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: false })
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('featured_images')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
-        console.warn('[getFeaturedImages] error:', error.message)
+      if (error) {
+        if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
+          console.warn('[getFeaturedImages] error:', error.message)
+        }
+        return []
       }
+      return (data ?? []) as FeaturedImage[]
+    } catch {
       return []
     }
-    return (data ?? []) as FeaturedImage[]
-  } catch {
-    return []
-  }
-}
+  },
+  ['featured_images_cache'],
+  { revalidate: 60, tags: ['featured_images'] }
+)
 
 // ---------------------------------------------------------------------------
 // LATEST & SAREE COLLECTION ITEMS (DATABASE DRIVEN)
@@ -283,56 +324,64 @@ export async function getFeaturedImages(): Promise<FeaturedImage[]> {
 /**
  * Fetch raw published Latest Collection items from Supabase table `latest_collection_items`.
  */
-export async function getLatestCollectionDatabaseItems(): Promise<CollectionItem[]> {
-  if (!isSupabaseConfigured()) return []
+export const getLatestCollectionDatabaseItems = unstable_cache(
+  async (): Promise<CollectionItem[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('latest_collection_items')
-      .select('*')
-      .eq('is_published', true)
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false })
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('latest_collection_items')
+        .select('*')
+        .eq('is_published', true)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
-        console.warn('[getLatestCollectionDatabaseItems] error:', error.message)
+      if (error) {
+        if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
+          console.warn('[getLatestCollectionDatabaseItems] error:', error.message)
+        }
+        return []
       }
+      return (data || []) as CollectionItem[]
+    } catch {
       return []
     }
-    return (data || []) as CollectionItem[]
-  } catch {
-    return []
-  }
-}
+  },
+  ['latest_collection_db_items_cache'],
+  { revalidate: 60, tags: ['latest_collection'] }
+)
 
 /**
  * Fetch raw published Saree Collection items from Supabase table `saree_collection_items`.
  */
-export async function getSareeCollectionDatabaseItems(): Promise<CollectionItem[]> {
-  if (!isSupabaseConfigured()) return []
+export const getSareeCollectionDatabaseItems = unstable_cache(
+  async (): Promise<CollectionItem[]> => {
+    if (!isSupabaseConfigured()) return []
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('saree_collection_items')
-      .select('*')
-      .eq('is_published', true)
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false })
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('saree_collection_items')
+        .select('*')
+        .eq('is_published', true)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
-        console.warn('[getSareeCollectionDatabaseItems] error:', error.message)
+      if (error) {
+        if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
+          console.warn('[getSareeCollectionDatabaseItems] error:', error.message)
+        }
+        return []
       }
+      return (data || []) as CollectionItem[]
+    } catch {
       return []
     }
-    return (data || []) as CollectionItem[]
-  } catch {
-    return []
-  }
-}
+  },
+  ['saree_collection_db_items_cache'],
+  { revalidate: 60, tags: ['saree_collection'] }
+)
 
 function mapCollectionItemToPortfolioItem(item: CollectionItem, fallbackIdx: number): PortfolioItem {
   const fallback = PORTFOLIO_COLLECTION[fallbackIdx % PORTFOLIO_COLLECTION.length]
@@ -386,30 +435,43 @@ export async function getSareeCollectionItems(): Promise<PortfolioItem[]> {
  * Fetch the portfolio_backgrounds settings row from Supabase.
  * Returns null if not configured or table doesn't exist yet.
  */
-export async function getPortfolioBackground(): Promise<PortfolioBackground | null> {
-  if (!isSupabaseConfigured()) return null
+export const getPortfolioBackground = unstable_cache(
+  async (): Promise<PortfolioBackground | null> => {
+    if (!isSupabaseConfigured()) return null
 
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('portfolio_backgrounds')
-      .select('*')
-      .limit(1)
-      .maybeSingle()
+    try {
+      const supabase = createPublicClient()
+      const { data, error } = await supabase
+        .from('portfolio_backgrounds')
+        .select('id, active_theme, classic_pos_x, classic_pos_y, custom_pos_x, custom_pos_y, updated_at')
+        .limit(1)
+        .maybeSingle()
 
-    if (error) {
-      if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
-        console.error('[getPortfolioBackground] error:', error.message)
+      if (error) {
+        if (!error.message.includes('does not exist') && !error.message.includes('schema cache')) {
+          console.error('[getPortfolioBackground] error:', error.message)
+        }
+        return null
       }
+      if (!data) return null
+
+      // Transform oversized base64 data URLs to use the lightweight /api/portfolio-bg/[theme] endpoint.
+      // This prevents inlining ~5MB of raw base64 data into every HTML document.
+      return {
+        id: data.id,
+        active_theme: (data.active_theme as 'classic' | 'custom') || 'classic',
+        classic_url: '/api/portfolio-bg/classic',
+        custom_url: '/api/portfolio-bg/custom',
+        classic_pos_x: data.classic_pos_x,
+        classic_pos_y: data.classic_pos_y,
+        custom_pos_x: data.custom_pos_x,
+        custom_pos_y: data.custom_pos_y,
+        updated_at: data.updated_at,
+      }
+    } catch {
       return null
     }
-    return data as PortfolioBackground | null
-  } catch {
-    return null
-  }
-}
-
-
-
-
-
+  },
+  ['portfolio_background_cache'],
+  { revalidate: 60, tags: ['portfolio_backgrounds'] }
+)

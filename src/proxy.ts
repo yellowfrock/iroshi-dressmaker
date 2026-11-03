@@ -1,25 +1,29 @@
 /**
- * Supabase auth proxy (formerly middleware).
+ * Supabase auth proxy.
  *
- * This proxy:
- * 1. Refreshes the auth session on every request when Supabase is configured.
- * 2. Protects all /admin routes — redirects unauthenticated users to /admin/login.
- * 3. Redirects logged-in users away from the /admin/login page.
- * 4. Gracefully allows public routes if Supabase credentials are not yet added.
+ * Performance-optimized:
+ * 1. Public routes bypass Supabase Auth calls entirely (0ms overhead for visitors).
+ * 2. Only /admin routes verify active admin sessions and refresh tokens.
+ * 3. Gracefully redirects unauthenticated users away from /admin to /admin/login.
  */
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Fast path: Public routes do not need Supabase Auth checks
+  if (!pathname.startsWith('/admin')) {
+    return NextResponse.next({ request })
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const isConfigured = Boolean(url && key && !url.includes('xxxxxxxxxxxx') && url.startsWith('http'))
 
-  const pathname = request.nextUrl.pathname
-
-  // If Supabase is not configured yet, allow public routes freely
+  // If Supabase is not configured yet, allow login page or redirect to login
   if (!isConfigured) {
-    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    if (pathname !== '/admin/login') {
       const loginUrl = request.nextUrl.clone()
       loginUrl.pathname = '/admin/login'
       return NextResponse.redirect(loginUrl)
@@ -55,13 +59,13 @@ export async function proxy(request: NextRequest) {
       }
     )
 
-    // Refresh session — IMPORTANT: do not remove this
+    // Verify admin session
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     // Protect all /admin routes except /admin/login
-    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    if (pathname !== '/admin/login') {
       if (!user) {
         const loginUrl = request.nextUrl.clone()
         loginUrl.pathname = '/admin/login'
@@ -70,7 +74,7 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    // Redirect authenticated users away from /admin/login
+    // Redirect authenticated users away from /admin/login to /admin dashboard
     if (pathname === '/admin/login' && user) {
       const dashboardUrl = request.nextUrl.clone()
       dashboardUrl.pathname = '/admin'
@@ -86,13 +90,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, 360 sequence frames, etc.)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/admin',
+    '/admin/:path*',
   ],
 }
+
