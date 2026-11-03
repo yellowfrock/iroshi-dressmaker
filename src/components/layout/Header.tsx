@@ -1,0 +1,235 @@
+'use client'
+
+import Link from 'next/link'
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { siteConfig } from '@/config/site'
+
+export default function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
+
+  // The homepage and mobile menu page use their own full-bleed layout
+  if (pathname === '/' || pathname === '/menu') return null
+
+  const waNumber = siteConfig.placeholders.whatsappNumber || '94769750186'
+  const waUrl = `https://wa.me/${waNumber}`
+
+  return (
+    <header className="sticky top-0 z-50 w-full bg-[#050505]/85 backdrop-blur-xl border-b border-white/10 select-none text-[#e5e5e5]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
+        {/* Brand Logo */}
+        <Link href="/" className="flex flex-col cursor-pointer group shrink-0 no-underline">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://res.cloudinary.com/ecyvwovp/image/upload/v1788533136/tag_ppng.png"
+            alt="Iroshi Dressmaker"
+            className="h-8 sm:h-10 w-auto max-w-[170px] sm:max-w-[220px] object-contain group-hover:opacity-85 transition-opacity drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+          />
+          <span className="font-mono text-[0.6rem] sm:text-[0.65rem] lowercase tracking-[0.18em] opacity-45 mt-0.5 text-[#e5e5e5] group-hover:opacity-75 transition-opacity">
+            www.iroshidressmaker.com
+          </span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-6 lg:gap-8 font-mono text-xs tracking-wider uppercase">
+          <Link
+            href="/"
+            className={`transition-colors no-underline ${
+              pathname === '/'
+                ? 'text-[#F4D389] font-medium'
+                : 'text-[#e5e5e5]/70 hover:text-white'
+            }`}
+          >
+            Home
+          </Link>
+          <Link
+            href="/portfolio"
+            className={`transition-colors no-underline ${
+              pathname.startsWith('/portfolio')
+                ? 'text-[#F4D389] font-medium'
+                : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+            }`}
+          >
+            Our Portfolio
+          </Link>
+          <Link
+            href="/portfolio#latest-collection"
+            className={`transition-colors no-underline ${
+              pathname.includes('latest-collection')
+                ? 'text-[#F4D389] font-medium'
+                : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+            }`}
+          >
+            Latest Collection
+          </Link>
+          <Link
+            href="/rental"
+            className={`transition-colors no-underline ${
+              pathname.startsWith('/rental')
+                ? 'text-[#F4D389] font-medium'
+                : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+            }`}
+          >
+            Rental Collection
+          </Link>
+          <Link
+            href="/about"
+            className={`transition-colors no-underline ${
+              pathname === '/about'
+                ? 'text-[#F4D389] font-medium'
+                : 'text-[#e5e5e5]/70 hover:text-white'
+            }`}
+          >
+            About Atelier
+          </Link>
+          <Link
+            href="/contact"
+            className={`transition-colors no-underline ${
+              pathname === '/contact'
+                ? 'text-[#F4D389] font-medium'
+                : 'text-[#e5e5e5]/70 hover:text-white'
+            }`}
+          >
+            Contact
+          </Link>
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="appointment-btn text-xs ml-2 cursor-pointer no-underline"
+          >
+            Make an Appointment
+          </a>
+        </nav>
+
+        {/* Mobile Actions */}
+        <div className="flex md:hidden items-center gap-2">
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 text-[0.68rem] font-medium tracking-wider uppercase text-white/90 bg-white/10 hover:bg-white/15 rounded-full border border-white/15 no-underline flex items-center gap-1.5"
+            aria-label="Book on WhatsApp"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span>Book</span>
+          </a>
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 border border-white/15 text-white transition-all cursor-pointer"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden bg-[#050505]/95 backdrop-blur-xl flex flex-col justify-between p-6 overflow-y-auto">
+          <div className="flex justify-between items-center border-b border-white/10 pb-5">
+            <div className="flex flex-col">
+              <span className="font-serif italic text-2xl font-bold text-white">#iroshi</span>
+              <span className="font-mono text-[0.6rem] tracking-widest text-[#F4D389] uppercase">
+                dressmaker
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close menu"
+              className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer border border-white/15"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+
+          <nav className="flex flex-col gap-2 my-8">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
+            >
+              <span>Home</span>
+              <span className="opacity-40">→</span>
+            </Link>
+            <Link
+              href="/portfolio"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-[#F4D389] hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
+            >
+              <span>Our Portfolio</span>
+              <span className="opacity-40">→</span>
+            </Link>
+            <Link
+              href="/portfolio#latest-collection"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
+            >
+              <span>Latest Collection</span>
+              <span className="opacity-40">→</span>
+            </Link>
+            <Link
+              href="/rental"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
+            >
+              <span>Rental Collection</span>
+              <span className="opacity-40">→</span>
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
+            >
+              <span>About Atelier</span>
+              <span className="opacity-40">→</span>
+            </Link>
+            <Link
+              href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
+            >
+              <span>Contact &amp; Studios</span>
+              <span className="opacity-40">→</span>
+            </Link>
+          </nav>
+
+          <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full min-h-[48px] py-3.5 px-6 rounded-full bg-[#D81B2B] hover:bg-[#BF1524] text-white font-medium text-center text-sm tracking-wide shadow-lg flex items-center justify-center gap-2 no-underline"
+            >
+              <span>Make an Appointment</span>
+            </a>
+            <a
+              href="tel:+94769750186"
+              className="w-full min-h-[44px] py-2 px-6 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 font-mono text-center text-xs tracking-wider flex items-center justify-center gap-2 no-underline"
+            >
+              <span>+94 76 975 0186</span>
+            </a>
+          </div>
+        </div>
+      )}
+    </header>
+  )
+}
