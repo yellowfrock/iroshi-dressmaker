@@ -20,6 +20,7 @@ const playfair = Playfair_Display({
 import FloatingWhatsAppButton from '@/components/whatsapp/FloatingWhatsAppButton'
 import MobileFloatingNav from '@/components/navigation/MobileFloatingNav'
 import { getSiteSettings } from '@/lib/supabase/queries'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: {
@@ -58,6 +59,7 @@ export default async function RootLayout({
         <Footer />
         <FloatingWhatsAppButton whatsappNumber={whatsappNumber} />
         <MobileFloatingNav whatsappNumber={whatsappNumber} />
+        <Analytics />
       </body>
     </html>
   )
