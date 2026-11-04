@@ -855,10 +855,10 @@ export default function TheSequenceHomepage({
             </Link>
             <Link
               id="nav-btn-bridal"
-              href="/portfolio#latest-collection"
+              href="/saree-collection"
               className="text-[#e5e5e5]/70 hover:text-[#F4D389] transition-colors no-underline"
             >
-              Latest Collection
+              Saree Collection
             </Link>
             <Link
               id="nav-btn-rental"
@@ -873,13 +873,6 @@ export default function TheSequenceHomepage({
               className="text-[#e5e5e5]/70 hover:text-white transition-colors no-underline"
             >
               About Atelier
-            </Link>
-            <Link
-              id="nav-btn-contact"
-              href="/contact"
-              className="text-[#e5e5e5]/70 hover:text-white transition-colors no-underline"
-            >
-              Contact
             </Link>
             <a
               id="nav-btn-archive"
@@ -979,11 +972,11 @@ export default function TheSequenceHomepage({
                 </Link>
                 <Link
                   id="mobile-nav-link-bridal"
-                  href="/portfolio#latest-collection"
+                  href="/saree-collection"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
                 >
-                  <span>Latest Collection</span>
+                  <span>Saree Collection</span>
                   <span className="opacity-40">→</span>
                 </Link>
                 <Link
@@ -1002,15 +995,6 @@ export default function TheSequenceHomepage({
                   className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
                 >
                   <span>About Atelier</span>
-                  <span className="opacity-40">→</span>
-                </Link>
-                <Link
-                  id="mobile-nav-link-contact"
-                  href="/contact"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-                >
-                  <span>Contact &amp; Studios</span>
                   <span className="opacity-40">→</span>
                 </Link>
               </nav>
@@ -1064,7 +1048,7 @@ export default function TheSequenceHomepage({
                 >
                   From the first idea to the final fitting, explore the dresses.
                 </p>
-                <div id="cta-btn-container" className="flex flex-wrap items-center gap-4 mt-6 sm:mt-10">
+                <div id="cta-btn-container" className="flex flex-wrap items-center gap-3 mt-6 sm:mt-10">
                   <a
                     id="cta-browse-our-work-btn"
                     href="https://www.behance.net/indirairoshini"
@@ -1074,6 +1058,13 @@ export default function TheSequenceHomepage({
                   >
                     <span>Browse Our Work</span>
                   </a>
+                  <Link
+                    id="cta-our-portfolio-btn"
+                    href="/portfolio"
+                    className="cta-button-portfolio inline-flex items-center justify-center text-center no-underline cursor-pointer min-h-[44px]"
+                  >
+                    <span>OUR PORTFOLIO</span>
+                  </Link>
                 </div>
               </div>
             </div>

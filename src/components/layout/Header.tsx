@@ -54,14 +54,14 @@ export default function Header() {
             Our Portfolio
           </Link>
           <Link
-            href="/portfolio#latest-collection"
+            href="/saree-collection"
             className={`transition-colors no-underline ${
-              pathname.includes('latest-collection')
+              pathname.startsWith('/saree-collection')
                 ? 'text-[#F4D389] font-medium'
                 : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
             }`}
           >
-            Latest Collection
+            Saree Collection
           </Link>
           <Link
             href="/rental"
@@ -82,16 +82,6 @@ export default function Header() {
             }`}
           >
             About Atelier
-          </Link>
-          <Link
-            href="/contact"
-            className={`transition-colors no-underline ${
-              pathname === '/contact'
-                ? 'text-[#F4D389] font-medium'
-                : 'text-[#e5e5e5]/70 hover:text-white'
-            }`}
-          >
-            Contact
           </Link>
           <a
             href={waUrl}
@@ -179,11 +169,11 @@ export default function Header() {
               <span className="opacity-40">→</span>
             </Link>
             <Link
-              href="/portfolio#latest-collection"
+              href="/saree-collection"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
             >
-              <span>Latest Collection</span>
+              <span>Saree Collection</span>
               <span className="opacity-40">→</span>
             </Link>
             <Link
@@ -200,14 +190,6 @@ export default function Header() {
               className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
             >
               <span>About Atelier</span>
-              <span className="opacity-40">→</span>
-            </Link>
-            <Link
-              href="/contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-            >
-              <span>Contact &amp; Studios</span>
               <span className="opacity-40">→</span>
             </Link>
           </nav>

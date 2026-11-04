@@ -146,6 +146,39 @@ html, body {
   box-shadow: 0 8px 18px rgba(212, 50, 50, 0.4);
 }
 
+.cta-button-portfolio {
+  color: #d43232;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 999px;
+  max-width: 100%;
+  padding: 14px 28px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 15px rgba(255, 255, 255, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cta-button-portfolio:hover {
+  transform: translateY(-2px);
+  color: #be123c;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 20px rgba(212, 50, 50, 0.2);
+}
+.cta-button-portfolio:active {
+  transform: translateY(1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
 .btn-whatsapp {
   background-color: var(--color-whatsapp);
   color: white;
@@ -215,12 +248,23 @@ html, body {
     display: none !important;
   }
 
-  /* 2. Center the "BROWSE OUR WORK" button horizontally on the screen */
+  /* 2. Center the hero action buttons horizontally on the screen */
   #cta-btn-container {
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
+    gap: 12px;
     margin-left: -48px;
     width: calc(100% + 48px);
+  }
+
+  .cta-button,
+  .cta-button-portfolio {
+    padding: 11px 18px;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
   }
 
   /* 4. Hide the green floating WhatsApp button on mobile only */

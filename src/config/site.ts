@@ -14,7 +14,7 @@ export const siteConfig = {
   navLinks: [
     { label: 'Home', href: '/' },
     { label: 'Our Portfolio', href: '/portfolio' },
-    { label: 'Latest Collection', href: '/portfolio#latest-collection' },
+    { label: 'Saree Collection', href: '/saree-collection' },
     { label: 'Rental Collection', href: '/rental' },
     { label: 'About', href: '/about' },
     { label: 'Contact', href: '/contact' },

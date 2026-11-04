@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { siteConfig } from '@/config/site'
+import ContactSection from '@/components/contact/ContactSection'
 
 export const metadata: Metadata = {
   title: 'About The Atelier | Iroshi Dress Maker',
@@ -207,6 +208,9 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+
+        {/* Contact Atelier Details */}
+        <ContactSection className="mt-16" />
       </section>
     </div>
   )
