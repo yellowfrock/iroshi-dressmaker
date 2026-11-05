@@ -19,23 +19,23 @@ export default function Header() {
       return
     }
 
-    const checkScroll = () => {
-      const heroEl = document.getElementById('hero-section')
-      if (heroEl) {
-        const rect = heroEl.getBoundingClientRect()
-        // Header switches to solid dark once the user scrolls past the hero section
-        setIsScrolled(rect.bottom <= 80)
-      } else {
-        setIsScrolled(window.scrollY > 300)
-      }
+    let rafId: number | null = null
+
+    const handleScroll = () => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        // Fully transparent only while at the very top (scrollY <= 10px);
+        // as soon as user scrolls past 10px, switch to solid dark sticky bar
+        setIsScrolled(window.scrollY > 10)
+      })
     }
 
-    checkScroll()
-    window.addEventListener('scroll', checkScroll, { passive: true })
-    window.addEventListener('resize', checkScroll, { passive: true })
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => {
-      window.removeEventListener('scroll', checkScroll)
-      window.removeEventListener('resize', checkScroll)
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      window.removeEventListener('scroll', handleScroll)
     }
   }, [isHome])
 
@@ -43,6 +43,7 @@ export default function Header() {
   if (pathname === '/menu') return null
 
   const isHomeTransparent = isHome && !isScrolled
+  const showTransparent = isHomeTransparent && !mobileMenuOpen
   const waNumber = siteConfig.placeholders.whatsappNumber || '94769750186'
   const waUrl = `https://wa.me/${waNumber}`
 
@@ -56,12 +57,12 @@ export default function Header() {
     <header
       className={`z-50 w-full select-none transition-all duration-300 ${
         isHome
-          ? `sticky md:fixed top-0 left-0 right-0 ${
-              isHomeTransparent
-                ? 'bg-[#050505]/85 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none border-b border-white/10 md:border-b-0 text-[#e5e5e5]'
-                : 'bg-[#050505]/85 backdrop-blur-xl border-b border-white/10 text-[#e5e5e5]'
+          ? `fixed top-0 left-0 right-0 ${
+              showTransparent
+                ? 'bg-transparent backdrop-blur-none border-b-0 shadow-none text-[#e5e5e5]'
+                : 'bg-[#050505]/95 backdrop-blur-xl border-b border-white/10 text-[#e5e5e5]'
             }`
-          : 'sticky top-0 bg-[#050505]/85 backdrop-blur-xl border-b border-white/10 text-[#e5e5e5]'
+          : 'sticky top-0 bg-[#050505]/95 backdrop-blur-xl border-b border-white/10 text-[#e5e5e5]'
       }`}
     >
       <div
@@ -88,10 +89,10 @@ export default function Header() {
             }`}
           />
           <span
-            className={`font-mono text-[0.6rem] sm:text-[0.65rem] lowercase opacity-45 text-[#e5e5e5] group-hover:opacity-75 transition-all duration-300 ${
+            className={`font-mono text-[0.6rem] sm:text-[0.65rem] lowercase text-[#e5e5e5] group-hover:opacity-75 transition-all duration-300 ${
               isHomeTransparent
-                ? 'tracking-[0.18em] sm:tracking-[0.2em] mt-0.5 sm:mt-1'
-                : 'tracking-[0.18em] mt-0.5'
+                ? 'tracking-[0.18em] sm:tracking-[0.2em] mt-0.5 sm:mt-1 opacity-65 drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]'
+                : 'tracking-[0.18em] mt-0.5 opacity-45'
             }`}
           >
             www.iroshidressmaker.com
