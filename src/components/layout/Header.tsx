@@ -9,6 +9,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const isHome = pathname === '/'
+  const isPortfolio = pathname === '/portfolio'
 
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -150,30 +151,34 @@ export default function Header() {
           >
             Our Portfolio
           </Link>
-          <Link
-            href="/saree-collection"
-            className={`transition-colors no-underline ${
-              isHomeTransparent
-                ? 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
-                : pathname.startsWith('/saree-collection')
-                  ? 'text-[#F4D389] font-medium'
-                  : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
-            }`}
-          >
-            Saree Collection
-          </Link>
-          <Link
-            href="/rental"
-            className={`transition-colors no-underline ${
-              isHomeTransparent
-                ? 'text-black font-semibold hover:text-black/75'
-                : pathname.startsWith('/rental')
-                  ? 'text-[#F4D389] font-medium'
-                  : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
-            }`}
-          >
-            Rental Collection
-          </Link>
+          {!isPortfolio && (
+            <>
+              <Link
+                href="/saree-collection"
+                className={`transition-colors no-underline ${
+                  isHomeTransparent
+                    ? 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+                    : pathname.startsWith('/saree-collection')
+                      ? 'text-[#F4D389] font-medium'
+                      : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+                }`}
+              >
+                Saree Collection
+              </Link>
+              <Link
+                href="/rental"
+                className={`transition-colors no-underline ${
+                  isHomeTransparent
+                    ? 'text-black font-semibold hover:text-black/75'
+                    : pathname.startsWith('/rental')
+                      ? 'text-[#F4D389] font-medium'
+                      : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+                }`}
+              >
+                Rental Collection
+              </Link>
+            </>
+          )}
           <Link
             href="/about"
             className={`transition-colors no-underline ${

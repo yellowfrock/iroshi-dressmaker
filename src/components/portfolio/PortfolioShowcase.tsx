@@ -110,14 +110,14 @@ export default function PortfolioShowcase({
           <div className="flex flex-wrap items-center justify-center gap-3 mb-3.5 sm:mb-5">
             <Link
               href="/saree-collection"
-              className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] sm:text-xs font-mono tracking-wider uppercase text-white/80 hover:text-white transition-all no-underline shadow-sm"
+              className="cta-button inline-flex items-center justify-center gap-1.5 text-center no-underline cursor-pointer min-h-[44px]"
             >
               <span>Saree Collection</span>
               <span className="text-[11px] sm:text-xs font-sans">↗</span>
             </Link>
             <Link
               href="/rental"
-              className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] sm:text-xs font-mono tracking-wider uppercase text-white/80 hover:text-white transition-all no-underline shadow-sm"
+              className="cta-button-portfolio inline-flex items-center justify-center gap-1.5 text-center no-underline cursor-pointer min-h-[44px]"
             >
               <span>Rental Collection</span>
               <span className="text-[11px] sm:text-xs font-sans">↗</span>
