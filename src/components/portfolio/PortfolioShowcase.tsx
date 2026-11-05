@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import type { PortfolioItem } from '@/data/portfolio-items'
 import type { PortfolioBackground } from '@/types'
 import { DualScrollBackground } from './DualScrollBackground'
@@ -105,56 +106,32 @@ export default function PortfolioShowcase({
         />
 
         <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-mono tracking-widest uppercase text-[#F4D389] mb-4 sm:mb-5 shadow-sm">
-            <span>Atelier Lookbook &amp; Bespoke Archive</span>
+          {/* Collection Quick Navigation */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-3.5 sm:mb-5">
+            <Link
+              href="/saree-collection"
+              className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] sm:text-xs font-mono tracking-wider uppercase text-white/80 hover:text-white transition-all no-underline shadow-sm"
+            >
+              <span>Saree Collection</span>
+              <span className="text-[11px] sm:text-xs font-sans">↗</span>
+            </Link>
+            <Link
+              href="/rental"
+              className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] sm:text-xs font-mono tracking-wider uppercase text-white/80 hover:text-white transition-all no-underline shadow-sm"
+            >
+              <span>Rental Collection</span>
+              <span className="text-[11px] sm:text-xs font-sans">↗</span>
+            </Link>
           </div>
 
-          <h1 className="text-[clamp(2.2rem,5.5vw,4.2rem)] font-light leading-[1.08] tracking-tight mb-4 sm:mb-5 text-white drop-shadow-md">
+          <h1 className="text-[clamp(2.2rem,5.5vw,4.2rem)] font-light leading-[1.08] tracking-tight text-white drop-shadow-md">
             Our <span className="font-serif italic font-medium text-[#F4D389]">Portfolio</span>
           </h1>
 
-          <p className="max-w-2xl text-xs sm:text-sm md:text-base text-white/70 font-light leading-relaxed">
-            A curated monograph of handcrafted bridal gowns, ethereal reception silhouettes, and exclusive evening rentals crafted by Indira Iroshini. Each creation reflects decades of artisanal precision, imported fabrics, and tailored perfection.
-          </p>
-
-          {/* Quick Actions & Anchors */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mt-6 sm:mt-7">
-            <a
-              id="portfolio-view-full-collection-btn"
-              href="https://www.behance.net/indirairoshini"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#F4D389] hover:bg-[#ebd080] text-black font-semibold text-[11px] sm:text-xs font-mono tracking-wider uppercase transition-all shadow-[0_4px_20px_rgba(244,211,137,0.3)] no-underline flex items-center gap-1.5 active:scale-95"
-            >
-              <span>View Full Collection</span>
-              <span>↗</span>
-            </a>
-            <a
-              href="#latest-collection"
-              className="px-4 sm:px-5 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] sm:text-xs font-mono tracking-wider uppercase text-white/80 hover:text-white transition-all no-underline"
-            >
-              Latest Collection ↓
-            </a>
-            <a
-              href="#saree-collection"
-              className="px-4 sm:px-5 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] sm:text-xs font-mono tracking-wider uppercase text-white/80 hover:text-white transition-all no-underline"
-            >
-              Saree Collection ↓
-            </a>
-            <a
-              href={activeWaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 sm:px-5 py-2 rounded-full bg-[#D81B2B] hover:bg-[#BF1524] text-[11px] sm:text-xs font-mono tracking-wider uppercase font-semibold text-white transition-all shadow-[0_4px_20px_rgba(216,27,43,0.3)] no-underline"
-            >
-              Book Private Fitting
-            </a>
-          </div>
-
-          {/* Glass toggle ("Blue's"/"Yellow's") directly below buttons */}
+          {/* Glass toggle ("Blue's"/"Yellow's") directly below heading */}
           <div
             className="flex items-center justify-center"
-            style={{ marginTop: 'clamp(20px, 3vh, 32px)' }}
+            style={{ marginTop: 'clamp(18px, 2.5vh, 28px)' }}
           >
             <GlassToggle
               checked={isCustom}
@@ -172,6 +149,7 @@ export default function PortfolioShowcase({
         heading="Latest Collection"
         description="A prestigious showcase of our latest handcrafted creations, ethereal reception silhouettes, and bespoke bridal masterworks."
         variant="portfolio"
+        showEyebrow={false}
         items={latestCollectionItems}
         sareeItems={sareeCollectionItems}
         showCarousel={true}

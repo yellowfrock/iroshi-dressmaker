@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { siteConfig } from '@/config/site'
@@ -8,6 +9,16 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
   const pathname = usePathname()
 
+  useEffect(() => {
+    const current = window.location.pathname
+    if (current === '/' || current === '/menu' || pathname === '/' || pathname === '/menu') {
+      const orphan = document.getElementById('site-global-footer')
+      if (orphan) {
+        orphan.style.display = 'none'
+      }
+    }
+  }, [pathname])
+
   // The homepage and mobile menu page use their own full-bleed layout
   if (pathname === '/' || pathname === '/menu') return null
 
@@ -15,7 +26,10 @@ export default function Footer() {
   const waUrl = `https://wa.me/${waNumber}`
 
   return (
-    <footer className="w-full bg-[#050505] text-[#e5e5e5] border-t border-white/10 select-none">
+    <footer
+      id="site-global-footer"
+      className="relative z-10 w-full bg-[#050505] text-[#e5e5e5] border-t border-white/10 select-none"
+    >
       {/* Upper Footer: Brand, Locations & Nav */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-16 lg:py-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
@@ -201,7 +215,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom Monograph Strip */}
-      <div className="border-t border-white/10 px-4 sm:px-8 lg:px-12 py-6">
+      <div className="border-t border-white/10 px-4 sm:px-8 lg:px-12 pt-6 pb-28 sm:pt-6 sm:pb-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-white/50">
           <div className="flex flex-wrap items-center gap-4 sm:gap-8">
             <a

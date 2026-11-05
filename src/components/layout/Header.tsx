@@ -78,16 +78,34 @@ export default function Header() {
           onClick={handleResetToStart}
           className="flex flex-col cursor-pointer group shrink-0 no-underline"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://res.cloudinary.com/ecyvwovp/image/upload/v1788533136/tag_ppng.png"
-            alt="Iroshi Dressmaker"
-            className={`w-auto object-contain group-hover:opacity-85 transition-all duration-300 drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] ${
-              isHomeTransparent
-                ? 'h-8 sm:h-10 md:h-11 lg:h-14 max-w-[170px] sm:max-w-[220px] lg:max-w-[280px]'
-                : 'h-8 sm:h-10 max-w-[170px] sm:max-w-[220px]'
-            }`}
-          />
+          <div className="inline-grid grid-cols-1 grid-rows-1 items-center w-fit transition-opacity duration-300 group-hover:opacity-85">
+            {/* Original logo (black text) - displayed when header is transparent */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://res.cloudinary.com/ecyvwovp/image/upload/v1788533136/tag_ppng.png"
+              alt="Iroshi Dressmaker"
+              width={4185}
+              height={836}
+              className={`col-start-1 row-start-1 w-auto object-contain transition-all duration-300 drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] ${
+                isHomeTransparent
+                  ? 'h-8 sm:h-10 md:h-11 lg:h-14 max-w-[170px] sm:max-w-[220px] lg:max-w-[280px]'
+                  : 'h-8 sm:h-10 max-w-[170px] sm:max-w-[220px]'
+              } ${showTransparent ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            />
+            {/* White-text logo - displayed when header has dark background */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-white-text.png"
+              alt="Iroshi Dressmaker"
+              width={4185}
+              height={836}
+              className={`col-start-1 row-start-1 w-auto object-contain transition-all duration-300 drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] ${
+                isHomeTransparent
+                  ? 'h-8 sm:h-10 md:h-11 lg:h-14 max-w-[170px] sm:max-w-[220px] lg:max-w-[280px]'
+                  : 'h-8 sm:h-10 max-w-[170px] sm:max-w-[220px]'
+              } ${!showTransparent ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            />
+          </div>
           <span
             className={`font-mono text-[0.6rem] sm:text-[0.65rem] lowercase text-[#e5e5e5] group-hover:opacity-75 transition-all duration-300 ${
               isHomeTransparent

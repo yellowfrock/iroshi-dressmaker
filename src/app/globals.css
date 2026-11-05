@@ -644,3 +644,13 @@ html, body {
   }
 }
 
+/* ============================================================
+   GLOBAL FOOTER VISIBILITY GUARDS
+   Ensure global footer is never displayed on homepage or menu
+   ============================================================ */
+body:has(#monograph-scroll-container) #site-global-footer,
+body:has(.menu-page-root) #site-global-footer {
+  display: none !important;
+}
+
+

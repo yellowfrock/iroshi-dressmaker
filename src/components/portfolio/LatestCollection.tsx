@@ -23,6 +23,7 @@ export interface LatestCollectionProps {
   scrollProgress?: number
   isCustom?: boolean
   className?: string
+  showEyebrow?: boolean
 }
 
 /**
@@ -47,6 +48,7 @@ export default function LatestCollection({
   scrollProgress = 0,
   isCustom = false,
   className = '',
+  showEyebrow = true,
 }: LatestCollectionProps) {
   const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null)
 
@@ -65,7 +67,7 @@ export default function LatestCollection({
       style={
         !isHome
           ? {
-              paddingTop: 'clamp(32px, 4vh, 48px)',
+              paddingTop: 'clamp(24px, 3.5vh, 36px)',
               paddingBottom: 'clamp(24px, 4vh, 40px)',
             }
           : undefined
@@ -73,15 +75,17 @@ export default function LatestCollection({
     >
       {/* Centered header container */}
       <div className="relative z-10 max-w-[1100px] mx-auto px-4 text-center">
-        <span
-          className={`font-mono uppercase tracking-[0.2em] block mb-2 font-semibold ${
-            isHome
-              ? 'text-xs sm:text-sm text-[#F4D389] drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]'
-              : 'text-[11px] sm:text-xs text-[#F4D389]'
-          }`}
-        >
-          Interactive Showcase
-        </span>
+        {showEyebrow && (
+          <span
+            className={`font-mono uppercase tracking-[0.2em] block mb-2 font-semibold ${
+              isHome
+                ? 'text-xs sm:text-sm text-[#F4D389] drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]'
+                : 'text-[11px] sm:text-xs text-[#F4D389]'
+            }`}
+          >
+            Interactive Showcase
+          </span>
+        )}
 
         <h2
           className={`font-serif italic font-medium leading-tight mb-2.5 sm:mb-3 text-white ${

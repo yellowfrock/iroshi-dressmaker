@@ -39,7 +39,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ item, onClose })
         </button>
 
         {/* Image column */}
-        <div className="relative w-full md:w-1/2 min-h-[340px] md:min-h-[500px] bg-neutral-900 overflow-hidden">
+        <div className="relative w-full md:w-1/2 min-h-[300px] md:min-h-[420px] bg-neutral-900 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.image}
@@ -64,65 +64,25 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ item, onClose })
         {/* Details column */}
         <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between">
           <div>
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-xs text-neutral-400 mb-2">
-              <span className="text-amber-400 uppercase tracking-wider font-semibold">{item.craft}</span>
-              <span>·</span>
-              <span>{item.origin}</span>
-            </div>
-
-            {/* Title & Price */}
+            {/* Title */}
             <h2
               id="modal-portfolio-title"
-              className="font-serif italic text-3xl sm:text-4xl font-bold text-white mb-3"
+              className="font-serif italic text-3xl sm:text-4xl font-bold text-white mb-4 pr-10"
             >
               {item.name}
             </h2>
 
-            <div className="flex items-baseline gap-3 mb-5">
-              <span className="text-2xl font-bold text-amber-300 tabular-nums">{item.price}</span>
-              {item.originalPrice && (
-                <span className="text-sm text-neutral-400 line-through tabular-nums">
-                  {item.originalPrice}
-                </span>
-              )}
-              <span className="text-xs text-emerald-400 ml-auto font-medium flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                Handcrafted Couture Piece
-              </span>
-            </div>
-
             {/* Description */}
             <p className="text-sm text-neutral-300 leading-relaxed mb-6">{item.description}</p>
 
-            {/* Specs grid */}
-            <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-xs mb-6">
-              <div>
-                <span className="text-neutral-500 block mb-0.5">Fabric Composition</span>
-                <span className="font-medium text-neutral-200">{item.fabric}</span>
-              </div>
-              <div>
-                <span className="text-neutral-500 block mb-0.5">Color Palette</span>
-                <span className="font-medium text-neutral-200">{item.colorName}</span>
-              </div>
-              <div>
-                <span className="text-neutral-500 block mb-0.5">Craft Tradition</span>
-                <span className="font-medium text-neutral-200">{item.craft}</span>
-              </div>
-              <div>
-                <span className="text-neutral-500 block mb-0.5">Fitting</span>
-                <span className="font-medium text-neutral-200">Three-stage Custom</span>
-              </div>
-            </div>
-
             {/* Trust */}
-            <div className="space-y-2 text-xs text-neutral-400 mb-6">
+            <div className="space-y-2.5 text-xs text-neutral-400 mb-6">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
+                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>Imported fabrics, artisan hand-finishing</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
+                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>Private consultation with Indira Iroshini</span>
               </div>
             </div>
@@ -133,7 +93,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ item, onClose })
             <button
               type="button"
               onClick={onClose}
-              className="py-2.5 px-6 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 active:scale-95"
+              className="py-2.5 px-6 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
             >
               <span>Close Details</span>
             </button>

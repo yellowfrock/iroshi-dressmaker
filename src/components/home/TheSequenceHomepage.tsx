@@ -918,7 +918,7 @@ export default function TheSequenceHomepage({
             id="creators-badge"
             className="inline-flex items-center justify-center px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-[#F4D389] text-[#18181b] text-xs sm:text-sm font-semibold tracking-tight shadow-sm mb-4 sm:mb-7 hover:brightness-105 transition-all"
           >
-            Join over 100,000 happy creators
+            Let’s Love Fashion
           </div>
 
           <h2
@@ -1007,7 +1007,7 @@ export default function TheSequenceHomepage({
          ============================================================ */}
       <section
         id="who-we-are-section"
-        className="relative z-10 w-full max-w-full bg-[#050505] text-[#e5e5e5] py-12 sm:py-20 lg:py-28 px-4 sm:px-8 lg:px-12 select-none border-t border-white/5 overflow-hidden"
+        className="relative z-10 w-full max-w-full bg-[#050505] text-[#e5e5e5] pt-12 pb-28 sm:pt-20 sm:pb-20 lg:pt-28 lg:pb-28 px-4 sm:px-8 lg:px-12 select-none border-t border-white/5 overflow-hidden"
       >
         <div className="max-w-[1200px] mx-auto w-full">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-baseline gap-2 sm:gap-4 mb-8 sm:mb-14">

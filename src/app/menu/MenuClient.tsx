@@ -127,7 +127,7 @@ const TILES = [
   {
     id: 'saree',
     label: 'Saree Collection',
-    href: '/portfolio#saree-collection',
+    href: '/saree-collection',
     ariaLabel: 'Go to Saree Collection on Our Portfolio',
     Icon: IconSaree,
   },
