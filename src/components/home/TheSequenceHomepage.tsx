@@ -344,7 +344,6 @@ export default function TheSequenceHomepage({
 
   // Telemetry & UI states
   const [grayscaleFilter] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const targetFrame = useRef(1)
   const renderedFrame = useRef(1)
@@ -745,11 +744,6 @@ export default function TheSequenceHomepage({
     }
   }
 
-  const handleResetToStart = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    targetFrame.current = 1
-  }
-
   const scrollToRentalCollection = () => {
     const el = document.getElementById('rental-collection-section')
     if (el) el.scrollIntoView({ behavior: 'smooth' })
@@ -812,217 +806,9 @@ export default function TheSequenceHomepage({
         onTouchEnd={handleTouchEnd}
         className="relative z-10 min-h-screen w-full max-w-full text-[#e5e5e5] overflow-x-hidden flex flex-col justify-between select-none bg-transparent"
       >
-        {/* Header inside Hero */}
-        <header
-          id="monograph-header"
-          className="relative z-40 flex justify-between items-center px-4 sm:px-8 lg:px-[60px] py-4 sm:py-6 lg:py-[36px] w-full max-w-full select-none"
-        >
-          {/* Brand Logo */}
-          <Link
-            id="monograph-brand"
-            href="/"
-            onClick={handleResetToStart}
-            className="brand flex flex-col cursor-pointer group shrink-0 no-underline"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              id="brand-logo-img"
-              src="https://res.cloudinary.com/ecyvwovp/image/upload/v1788533136/tag_ppng.png"
-              alt="Iroshi Dressmaker"
-              className="h-8 sm:h-11 lg:h-14 w-auto max-w-[170px] sm:max-w-[220px] lg:max-w-[280px] object-contain group-hover:opacity-85 transition-opacity drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
-            />
-            <span className="version-label font-mono text-[0.6rem] sm:text-[0.65rem] lowercase tracking-[0.18em] sm:tracking-[0.2em] opacity-45 mt-0.5 sm:mt-1 text-[#e5e5e5] group-hover:opacity-75 transition-opacity">
-              www.iroshidressmaker.com
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav id="monograph-nav-desktop" className="hidden md:flex items-center gap-5 lg:gap-7 font-mono text-sm tracking-wider uppercase">
-            <Link
-              id="nav-btn-home"
-              href="/"
-              onClick={handleResetToStart}
-              className="text-[#F4D389] font-medium transition-colors no-underline cursor-pointer"
-            >
-              Home
-            </Link>
-            <Link
-              id="nav-btn-portfolio"
-              href="/portfolio"
-              className="text-black font-semibold hover:text-black/75 transition-colors no-underline"
-            >
-              Our Portfolio
-            </Link>
-            <Link
-              id="nav-btn-bridal"
-              href="/saree-collection"
-              className="text-[#e5e5e5]/70 hover:text-[#F4D389] transition-colors no-underline"
-            >
-              Saree Collection
-            </Link>
-            <Link
-              id="nav-btn-rental"
-              href="/rental"
-              className="text-black font-semibold hover:text-black/75 transition-colors no-underline"
-            >
-              Rental Collection
-            </Link>
-            <Link
-              id="nav-btn-about"
-              href="/about"
-              className="text-[#e5e5e5]/70 hover:text-white transition-colors no-underline"
-            >
-              About Atelier
-            </Link>
-            <a
-              id="nav-btn-archive"
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="appointment-btn !text-sm ml-2 cursor-pointer no-underline"
-            >
-              Make an Appointment
-            </a>
-          </nav>
-
-          {/* Mobile Actions */}
-          <div className="flex md:hidden items-center gap-2">
-            <a
-              id="mobile-quick-appointment-btn"
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 text-[0.68rem] font-medium tracking-wider uppercase text-white/90 bg-white/10 hover:bg-white/15 rounded-full border border-white/15 no-underline flex items-center gap-1.5"
-              aria-label="Book on WhatsApp"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span>Book</span>
-            </a>
-
-            <button
-              id="mobile-nav-hamburger-btn"
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 border border-white/15 text-white transition-all cursor-pointer"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Mobile Overlay Menu */}
-          {mobileMenuOpen && (
-            <div
-              id="mobile-nav-overlay"
-              className="fixed inset-0 z-50 md:hidden bg-[#050505]/95 backdrop-blur-xl flex flex-col justify-between p-6 overflow-y-auto"
-            >
-              <div className="flex justify-between items-center border-b border-white/10 pb-5">
-                <div className="flex flex-col">
-                  <span className="font-serif italic text-2xl font-bold text-white">#iroshi</span>
-                  <span className="font-mono text-[0.6rem] tracking-widest text-[#F4D389] uppercase">
-                    dressmaker
-                  </span>
-                </div>
-                <button
-                  id="mobile-nav-close-btn"
-                  type="button"
-                  onClick={() => setMobileMenuOpen(false)}
-                  aria-label="Close menu"
-                  className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer border border-white/15"
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-
-              <nav className="flex flex-col gap-2 my-8">
-                <Link
-                  id="mobile-nav-link-home"
-                  href="/"
-                  onClick={() => {
-                    handleResetToStart()
-                    setMobileMenuOpen(false)
-                  }}
-                  className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-                >
-                  <span>Home</span>
-                  <span className="opacity-40">→</span>
-                </Link>
-                <Link
-                  id="mobile-nav-link-portfolio"
-                  href="/portfolio"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-[#F4D389] hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-                >
-                  <span>Our Portfolio</span>
-                  <span className="opacity-40">→</span>
-                </Link>
-                <Link
-                  id="mobile-nav-link-bridal"
-                  href="/saree-collection"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-                >
-                  <span>Saree Collection</span>
-                  <span className="opacity-40">→</span>
-                </Link>
-                <Link
-                  id="mobile-nav-link-rental"
-                  href="/rental"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-                >
-                  <span>Rental Collection</span>
-                  <span className="opacity-40">→</span>
-                </Link>
-                <Link
-                  id="mobile-nav-link-about"
-                  href="/about"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-                >
-                  <span>About Atelier</span>
-                  <span className="opacity-40">→</span>
-                </Link>
-              </nav>
-
-              <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
-                <a
-                  id="mobile-drawer-appointment-btn"
-                  href={waUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full min-h-[48px] py-3.5 px-6 rounded-full bg-[#D81B2B] hover:bg-[#BF1524] text-white font-medium text-center text-sm tracking-wide shadow-lg flex items-center justify-center gap-2 no-underline"
-                >
-                  <span>Make an Appointment</span>
-                </a>
-                <a
-                  id="mobile-drawer-phone-btn"
-                  href="tel:+94769750186"
-                  className="w-full min-h-[44px] py-2 px-6 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 font-mono text-center text-xs tracking-wider flex items-center justify-center gap-2 no-underline"
-                >
-                  <span>+94 76 975 0186</span>
-                </a>
-              </div>
-            </div>
-          )}
-        </header>
 
         {/* Main Monograph Hero Content */}
-        <main
+        <div
           id="monograph-hero-main"
           className="relative z-10 flex-1 flex items-center px-4 sm:px-8 lg:px-[60px] py-4 sm:py-6 lg:py-8 w-full max-w-full pointer-events-none"
         >
@@ -1069,7 +855,7 @@ export default function TheSequenceHomepage({
               </div>
             </div>
           </div>
-        </main>
+        </div>
 
         {/* Monograph Footer */}
         <footer
@@ -1224,7 +1010,7 @@ export default function TheSequenceHomepage({
         className="relative z-10 w-full max-w-full bg-[#050505] text-[#e5e5e5] py-12 sm:py-20 lg:py-28 px-4 sm:px-8 lg:px-12 select-none border-t border-white/5 overflow-hidden"
       >
         <div className="max-w-[1200px] mx-auto w-full">
-          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-baseline gap-2 sm:gap-4 mb-8 sm:mb-14">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-baseline gap-2 sm:gap-4 mb-8 sm:mb-14">
             <h2
               id="who-we-are-heading"
               className="font-serif italic font-normal text-[clamp(2.1rem,7vw,5.5rem)] leading-[0.95] text-white tracking-[-0.03em] m-0"
@@ -1242,7 +1028,7 @@ export default function TheSequenceHomepage({
               <span className="w-1.5 h-1.5 rounded-full bg-[#F4D389]" />
               @iroshi_dressmaker
             </a>
-          </header>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 sm:gap-10 lg:gap-12 items-start mb-10 sm:mb-18">
             <div className="flex flex-col w-full">

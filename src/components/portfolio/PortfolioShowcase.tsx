@@ -95,7 +95,7 @@ export default function PortfolioShowcase({
       />
 
       {/* Portfolio Hero Header */}
-      <header className="relative pt-[clamp(32px,5vh,56px)] pb-0 px-4 sm:px-8 lg:px-12 overflow-hidden text-center">
+      <div className="relative pt-[clamp(32px,5vh,56px)] pb-0 px-4 sm:px-8 lg:px-12 overflow-hidden text-center">
         {/* Ambient subtle vignette */}
         <div
           className="absolute inset-0 pointer-events-none opacity-30"
@@ -164,7 +164,7 @@ export default function PortfolioShowcase({
             />
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Latest Collection Section (with Saree Collection Focus Carousel below) */}
       <LatestCollection

@@ -1,44 +1,120 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { siteConfig } from '@/config/site'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const isHome = pathname === '/'
 
-  // The homepage and mobile menu page use their own full-bleed layout
-  if (pathname === '/' || pathname === '/menu') return null
+  const [isScrolled, setIsScrolled] = useState(false)
 
+  // Scroll detection for home page transparent header transition
+  useEffect(() => {
+    if (!isHome) {
+      setIsScrolled(false)
+      return
+    }
+
+    const checkScroll = () => {
+      const heroEl = document.getElementById('hero-section')
+      if (heroEl) {
+        const rect = heroEl.getBoundingClientRect()
+        // Header switches to solid dark once the user scrolls past the hero section
+        setIsScrolled(rect.bottom <= 80)
+      } else {
+        setIsScrolled(window.scrollY > 300)
+      }
+    }
+
+    checkScroll()
+    window.addEventListener('scroll', checkScroll, { passive: true })
+    window.addEventListener('resize', checkScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', checkScroll)
+      window.removeEventListener('resize', checkScroll)
+    }
+  }, [isHome])
+
+  // The mobile menu page uses its own full-bleed layout
+  if (pathname === '/menu') return null
+
+  const isHomeTransparent = isHome && !isScrolled
   const waNumber = siteConfig.placeholders.whatsappNumber || '94769750186'
   const waUrl = `https://wa.me/${waNumber}`
 
+  const handleResetToStart = () => {
+    if (isHome) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#050505]/85 backdrop-blur-xl border-b border-white/10 select-none text-[#e5e5e5]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
+    <header
+      className={`z-50 w-full select-none transition-all duration-300 ${
+        isHome
+          ? `sticky md:fixed top-0 left-0 right-0 ${
+              isHomeTransparent
+                ? 'bg-[#050505]/85 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none border-b border-white/10 md:border-b-0 text-[#e5e5e5]'
+                : 'bg-[#050505]/85 backdrop-blur-xl border-b border-white/10 text-[#e5e5e5]'
+            }`
+          : 'sticky top-0 bg-[#050505]/85 backdrop-blur-xl border-b border-white/10 text-[#e5e5e5]'
+      }`}
+    >
+      <div
+        className={`transition-all duration-300 flex items-center justify-between ${
+          isHomeTransparent
+            ? 'w-full max-w-full px-4 sm:px-8 lg:px-[60px] h-20 md:h-auto md:py-6 lg:py-[36px]'
+            : 'max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 h-20'
+        }`}
+      >
         {/* Brand Logo */}
-        <Link href="/" className="flex flex-col cursor-pointer group shrink-0 no-underline">
+        <Link
+          href="/"
+          onClick={handleResetToStart}
+          className="flex flex-col cursor-pointer group shrink-0 no-underline"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://res.cloudinary.com/ecyvwovp/image/upload/v1788533136/tag_ppng.png"
             alt="Iroshi Dressmaker"
-            className="h-8 sm:h-10 w-auto max-w-[170px] sm:max-w-[220px] object-contain group-hover:opacity-85 transition-opacity drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+            className={`w-auto object-contain group-hover:opacity-85 transition-all duration-300 drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] ${
+              isHomeTransparent
+                ? 'h-8 sm:h-10 md:h-11 lg:h-14 max-w-[170px] sm:max-w-[220px] lg:max-w-[280px]'
+                : 'h-8 sm:h-10 max-w-[170px] sm:max-w-[220px]'
+            }`}
           />
-          <span className="font-mono text-[0.6rem] sm:text-[0.65rem] lowercase tracking-[0.18em] opacity-45 mt-0.5 text-[#e5e5e5] group-hover:opacity-75 transition-opacity">
+          <span
+            className={`font-mono text-[0.6rem] sm:text-[0.65rem] lowercase opacity-45 text-[#e5e5e5] group-hover:opacity-75 transition-all duration-300 ${
+              isHomeTransparent
+                ? 'tracking-[0.18em] sm:tracking-[0.2em] mt-0.5 sm:mt-1'
+                : 'tracking-[0.18em] mt-0.5'
+            }`}
+          >
             www.iroshidressmaker.com
           </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-8 font-mono text-xs tracking-wider uppercase">
+        <nav
+          className={`hidden md:flex items-center uppercase tracking-wider font-mono transition-all duration-300 ${
+            isHomeTransparent
+              ? 'gap-5 lg:gap-7 text-sm'
+              : 'gap-6 lg:gap-8 text-xs'
+          }`}
+        >
           <Link
             href="/"
-            className={`transition-colors no-underline ${
-              pathname === '/'
+            onClick={handleResetToStart}
+            className={`transition-colors no-underline cursor-pointer ${
+              isHomeTransparent
                 ? 'text-[#F4D389] font-medium'
-                : 'text-[#e5e5e5]/70 hover:text-white'
+                : pathname === '/'
+                  ? 'text-[#F4D389] font-medium'
+                  : 'text-[#e5e5e5]/70 hover:text-white'
             }`}
           >
             Home
@@ -46,9 +122,11 @@ export default function Header() {
           <Link
             href="/portfolio"
             className={`transition-colors no-underline ${
-              pathname.startsWith('/portfolio')
-                ? 'text-[#F4D389] font-medium'
-                : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+              isHomeTransparent
+                ? 'text-black font-semibold hover:text-black/75'
+                : pathname.startsWith('/portfolio')
+                  ? 'text-[#F4D389] font-medium'
+                  : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
             }`}
           >
             Our Portfolio
@@ -56,9 +134,11 @@ export default function Header() {
           <Link
             href="/saree-collection"
             className={`transition-colors no-underline ${
-              pathname.startsWith('/saree-collection')
-                ? 'text-[#F4D389] font-medium'
-                : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+              isHomeTransparent
+                ? 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+                : pathname.startsWith('/saree-collection')
+                  ? 'text-[#F4D389] font-medium'
+                  : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
             }`}
           >
             Saree Collection
@@ -66,9 +146,11 @@ export default function Header() {
           <Link
             href="/rental"
             className={`transition-colors no-underline ${
-              pathname.startsWith('/rental')
-                ? 'text-[#F4D389] font-medium'
-                : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
+              isHomeTransparent
+                ? 'text-black font-semibold hover:text-black/75'
+                : pathname.startsWith('/rental')
+                  ? 'text-[#F4D389] font-medium'
+                  : 'text-[#e5e5e5]/70 hover:text-[#F4D389]'
             }`}
           >
             Rental Collection
@@ -76,9 +158,11 @@ export default function Header() {
           <Link
             href="/about"
             className={`transition-colors no-underline ${
-              pathname === '/about'
-                ? 'text-[#F4D389] font-medium'
-                : 'text-[#e5e5e5]/70 hover:text-white'
+              isHomeTransparent
+                ? 'text-[#e5e5e5]/70 hover:text-white'
+                : pathname === '/about'
+                  ? 'text-[#F4D389] font-medium'
+                  : 'text-[#e5e5e5]/70 hover:text-white'
             }`}
           >
             About Atelier
@@ -87,7 +171,9 @@ export default function Header() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="appointment-btn text-xs ml-2 cursor-pointer no-underline"
+            className={`appointment-btn ml-2 cursor-pointer no-underline transition-all duration-300 ${
+              isHomeTransparent ? '!text-sm' : 'text-xs'
+            }`}
           >
             Make an Appointment
           </a>
@@ -154,7 +240,10 @@ export default function Header() {
           <nav className="flex flex-col gap-2 my-8">
             <Link
               href="/"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => {
+                handleResetToStart()
+                setMobileMenuOpen(false)
+              }}
               className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
             >
               <span>Home</span>
