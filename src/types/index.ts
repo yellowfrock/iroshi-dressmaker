@@ -74,6 +74,7 @@ export interface CollectionItem {
   image_url: string
   image_path: string | null
   detail_url: string | null
+  images?: string[] | null
   sort_order: number
   is_published: boolean
   saree_code?: string | null

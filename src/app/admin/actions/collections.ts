@@ -36,6 +36,91 @@ function revalidateAllCollectionPages() {
 }
 
 /**
+ * Normalizes database item so `images` array always contains [image1, image2]
+ * and fallbacks for missing columns operate smoothly.
+ */
+function normalizeCollectionItem(data: any, fallbackCode?: string | null): CollectionItem {
+  if (!data) return data
+  const rawImages: string[] = []
+  if (Array.isArray(data.images)) {
+    data.images.forEach((img: unknown) => {
+      if (typeof img === 'string' && img.trim()) rawImages.push(img.trim())
+    })
+  }
+  if (rawImages.length === 0) {
+    if (data.image_url && typeof data.image_url === 'string' && data.image_url.trim()) {
+      rawImages.push(data.image_url.trim())
+    }
+    if (data.detail_url && typeof data.detail_url === 'string' && data.detail_url.trim()) {
+      rawImages.push(data.detail_url.trim())
+    }
+  }
+
+  return {
+    ...data,
+    saree_code: data.saree_code || fallbackCode || null,
+    images: rawImages,
+    image_url: rawImages[0] || data.image_url || '',
+    detail_url: rawImages[1] || data.detail_url || null,
+  } as CollectionItem
+}
+
+/**
+ * Safely inserts into a Supabase table. If a column is missing from schema cache
+ * (PostgREST PGRST204 error), it strips that column and retries automatically.
+ */
+async function safeInsert(adminClient: any, tableName: string, payload: Record<string, unknown>) {
+  const currentPayload = { ...payload }
+  while (true) {
+    const { data, error } = await adminClient
+      .from(tableName)
+      .insert(currentPayload)
+      .select()
+      .single()
+
+    if (!error) return data
+    if (error.code === 'PGRST204') {
+      const match = error.message.match(/Could not find the '([^']+)' column/)
+      if (match && match[1] in currentPayload) {
+        console.warn(`[safeInsert] Column '${match[1]}' not in ${tableName} schema. Stripping and retrying.`)
+        delete currentPayload[match[1]]
+        continue
+      }
+    }
+    console.error(`[safeInsert] Error inserting into ${tableName}:`, error.message)
+    throw new Error(error.message)
+  }
+}
+
+/**
+ * Safely updates a Supabase row. If a column is missing from schema cache
+ * (PostgREST PGRST204 error), it strips that column and retries automatically.
+ */
+async function safeUpdate(adminClient: any, tableName: string, id: string, payload: Record<string, unknown>) {
+  const currentPayload = { ...payload }
+  while (true) {
+    const { data, error } = await adminClient
+      .from(tableName)
+      .update(currentPayload)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (!error) return data
+    if (error.code === 'PGRST204') {
+      const match = error.message.match(/Could not find the '([^']+)' column/)
+      if (match && match[1] in currentPayload) {
+        console.warn(`[safeUpdate] Column '${match[1]}' not in ${tableName} schema. Stripping and retrying.`)
+        delete currentPayload[match[1]]
+        continue
+      }
+    }
+    console.error(`[safeUpdate] Error updating ${tableName}:`, error.message)
+    throw new Error(error.message)
+  }
+}
+
+/**
  * Fetch all items for admin list view (both published and unpublished).
  */
 export async function getAdminCollectionItems(type: CollectionType): Promise<CollectionItem[]> {
@@ -54,7 +139,7 @@ export async function getAdminCollectionItems(type: CollectionType): Promise<Col
     throw new Error(error.message)
   }
 
-  return (data || []) as CollectionItem[]
+  return ((data || []) as any[]).map((it) => normalizeCollectionItem(it))
 }
 
 export interface CreateCollectionItemInput {
@@ -64,13 +149,14 @@ export interface CreateCollectionItemInput {
   image_url: string
   image_path?: string | null
   detail_url?: string | null
+  images?: string[] | null
   sort_order?: number
   is_published?: boolean
   saree_code?: string | null
 }
 
 /**
- * Create a new collection item.
+ * Create a new collection item supporting 2 images (front view and detail view).
  */
 export async function createCollectionItem(
   type: CollectionType,
@@ -80,49 +166,48 @@ export async function createCollectionItem(
   const adminClient = await createAdminClient()
   const tableName = getTableName(type)
 
+  const images = (input.images && input.images.length > 0)
+    ? input.images.filter(Boolean)
+    : [input.image_url, input.detail_url].filter(Boolean) as string[]
+
   const insertPayload: Record<string, unknown> = {
     title: input.title.trim(),
     subtitle_badge: input.subtitle_badge?.trim() || null,
     description: input.description?.trim() || null,
-    image_url: input.image_url.trim(),
+    image_url: (images[0] || input.image_url || '').trim(),
     image_path: input.image_path?.trim() || null,
-    detail_url: input.detail_url?.trim() || null,
+    detail_url: (images[1] || input.detail_url || '').trim() || null,
     sort_order: input.sort_order ?? 0,
     is_published: input.is_published ?? true,
   }
-  if (type === 'saree' && input.saree_code !== undefined) {
-    insertPayload.saree_code = input.saree_code?.trim() || null
+
+  if (type === 'saree') {
+    if (input.saree_code !== undefined && input.saree_code !== null) {
+      insertPayload.saree_code = input.saree_code.trim() || null
+    }
+    insertPayload.images = images
   }
 
-  const { data, error } = await adminClient
-    .from(tableName)
-    .insert(insertPayload)
-    .select()
-    .single()
-
-  if (error) {
-    console.error(`[createCollectionItem] Error inserting into ${tableName}:`, error.message)
-    throw new Error(error.message)
-  }
-
+  const data = await safeInsert(adminClient, tableName, insertPayload)
   revalidateAllCollectionPages()
-  return data as CollectionItem
+  return normalizeCollectionItem(data, input.saree_code)
 }
 
 export interface UpdateCollectionItemInput {
   title?: string
   subtitle_badge?: string | null
   description?: string | null
-  image_url?: string
+  image_url?: string | null
   image_path?: string | null
   detail_url?: string | null
+  images?: string[] | null
   sort_order?: number
   is_published?: boolean
   saree_code?: string | null
 }
 
 /**
- * Update an existing collection item, safely cleaning up the old storage image if replaced.
+ * Update an existing collection item, safely cleaning up old storage images if replaced.
  */
 export async function updateCollectionItem(
   type: CollectionType,
@@ -133,7 +218,7 @@ export async function updateCollectionItem(
   const adminClient = await createAdminClient()
   const tableName = getTableName(type)
 
-  // If replacing image, fetch previous image_path to delete old file
+  // If replacing primary image, fetch previous image_path to delete old file
   const isReplacingImage = input.image_path !== undefined || (input.image_url !== undefined && input.image_path === null)
   if (isReplacingImage) {
     const { data: existing } = await adminClient
@@ -157,27 +242,29 @@ export async function updateCollectionItem(
   if (input.description !== undefined) updatePayload.description = input.description?.trim() || null
   if (input.image_url !== undefined) updatePayload.image_url = input.image_url ? input.image_url.trim() : null
   if (input.image_path !== undefined) updatePayload.image_path = input.image_path?.trim() || null
-  if (input.detail_url !== undefined) updatePayload.detail_url = input.detail_url?.trim() || null
+  if (input.detail_url !== undefined) updatePayload.detail_url = input.detail_url ? input.detail_url.trim() : null
   if (input.sort_order !== undefined) updatePayload.sort_order = input.sort_order
   if (input.is_published !== undefined) updatePayload.is_published = input.is_published
-  if (type === 'saree' && input.saree_code !== undefined) {
-    updatePayload.saree_code = input.saree_code?.trim() || null
+
+  if (type === 'saree') {
+    if (input.saree_code !== undefined) {
+      updatePayload.saree_code = input.saree_code?.trim() || null
+    }
+    if (input.images !== undefined) {
+      updatePayload.images = input.images
+      if (input.images && input.images.length > 0) {
+        updatePayload.image_url = input.images[0] || null
+        updatePayload.detail_url = input.images[1] || null
+      } else if (input.images && input.images.length === 0) {
+        updatePayload.image_url = null
+        updatePayload.detail_url = null
+      }
+    }
   }
 
-  const { data, error } = await adminClient
-    .from(tableName)
-    .update(updatePayload)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    console.error(`[updateCollectionItem] Error updating ${tableName}:`, error.message)
-    throw new Error(error.message)
-  }
-
+  const data = await safeUpdate(adminClient, tableName, id, updatePayload)
   revalidateAllCollectionPages()
-  return data as CollectionItem
+  return normalizeCollectionItem(data, input.saree_code)
 }
 
 /**
@@ -270,7 +357,7 @@ export async function reorderCollectionItems(
 
 /**
  * Upload an image to the 'collection-images' bucket via server action.
- * Enforces file size <= 5MB and allowed mime types (jpeg, png, webp).
+ * Enforces file size <= 10MB and allowed mime types (jpeg, png, webp, avif).
  */
 export async function uploadCollectionImageAction(
   formData: FormData
@@ -335,7 +422,8 @@ export async function uploadCollectionImageAction(
  */
 export async function removeCollectionItemImage(
   type: CollectionType,
-  id: string
+  id: string,
+  slot: 1 | 2 = 1
 ): Promise<CollectionItem> {
   await assertAdmin()
   const adminClient = await createAdminClient()
@@ -343,30 +431,35 @@ export async function removeCollectionItemImage(
 
   const { data: existing } = await adminClient
     .from(tableName)
-    .select('image_path')
+    .select('*')
     .eq('id', id)
     .single()
 
-  if (existing?.image_path) {
-    try {
-      await adminClient.storage.from('collection-images').remove([existing.image_path])
-    } catch (err) {
-      console.warn(`[removeCollectionItemImage] Storage file cleanup note:`, err)
+  if (slot === 1) {
+    if (existing?.image_path) {
+      try {
+        await adminClient.storage.from('collection-images').remove([existing.image_path])
+      } catch (err) {
+        console.warn(`[removeCollectionItemImage] Storage file cleanup note:`, err)
+      }
     }
   }
 
-  const { data, error } = await adminClient
-    .from(tableName)
-    .update({ image_url: null, image_path: null })
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    console.error(`[removeCollectionItemImage] Error clearing image in ${tableName}:`, error.message)
-    throw new Error(error.message)
+  const updatePayload: Record<string, unknown> = {}
+  if (slot === 1) {
+    updatePayload.image_url = null
+    updatePayload.image_path = null
+    if (Array.isArray(existing?.images)) {
+      updatePayload.images = existing.images.slice(1)
+    }
+  } else {
+    updatePayload.detail_url = null
+    if (Array.isArray(existing?.images)) {
+      updatePayload.images = existing.images.slice(0, 1)
+    }
   }
 
+  const data = await safeUpdate(adminClient, tableName, id, updatePayload)
   revalidateAllCollectionPages()
-  return data as CollectionItem
+  return normalizeCollectionItem(data)
 }

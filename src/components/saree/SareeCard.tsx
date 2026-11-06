@@ -27,7 +27,13 @@ export default function SareeCard({
   const cardAnchor = saree.saree_code ? saree.saree_code.toLowerCase().replace(/[^a-z0-9]/g, '-') : `saree-${index + 1}`
   const pageUrl = `${siteUrl.replace(/\/$/, '')}/saree-collection#${cardAnchor}`
 
-  const images = getSareeImages(sareeCode, saree.image_url)
+  const rawImages = (Array.isArray(saree.images) && saree.images.length > 0)
+    ? saree.images.filter(Boolean)
+    : [saree.image_url, saree.detail_url].filter(Boolean) as string[]
+
+  const images = rawImages.length > 0
+    ? rawImages
+    : getSareeImages(sareeCode, saree.image_url)
 
   const waText = `Hello Iroshi Dress Maker, I am interested in bespoke saree "${saree.title}" (Code: ${sareeCode}). View here: ${pageUrl}`
   const waUrl = `https://wa.me/${effectiveNumber}?text=${encodeURIComponent(waText)}`

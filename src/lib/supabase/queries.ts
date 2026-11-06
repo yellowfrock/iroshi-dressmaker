@@ -374,7 +374,28 @@ export const getSareeCollectionDatabaseItems = unstable_cache(
         }
         return []
       }
-      return (data || []) as CollectionItem[]
+      return (data || []).map((item: any) => {
+        const rawImages: string[] = []
+        if (Array.isArray(item.images)) {
+          item.images.forEach((img: unknown) => {
+            if (typeof img === 'string' && img.trim()) rawImages.push(img.trim())
+          })
+        }
+        if (rawImages.length === 0) {
+          if (item.image_url && typeof item.image_url === 'string' && item.image_url.trim()) {
+            rawImages.push(item.image_url.trim())
+          }
+          if (item.detail_url && typeof item.detail_url === 'string' && item.detail_url.trim()) {
+            rawImages.push(item.detail_url.trim())
+          }
+        }
+        return {
+          ...item,
+          images: rawImages,
+          image_url: rawImages[0] || item.image_url || '',
+          detail_url: rawImages[1] || item.detail_url || null,
+        } as CollectionItem
+      })
     } catch {
       return []
     }
