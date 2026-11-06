@@ -63,11 +63,14 @@ export const SAREE_GALLERY_IMAGES: Record<string, string[]> = {
  */
 export function getSareeImages(sareeCode: string, fallbackUrl?: string | null): string[] {
   const configured = SAREE_GALLERY_IMAGES[sareeCode]
+  if (fallbackUrl) {
+    if (configured && configured.length > 1) {
+      return [fallbackUrl, configured[1]]
+    }
+    return [fallbackUrl]
+  }
   if (configured && configured.length > 0) {
     return configured
-  }
-  if (fallbackUrl) {
-    return [fallbackUrl]
   }
   return []
 }

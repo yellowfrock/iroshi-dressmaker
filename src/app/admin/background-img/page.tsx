@@ -321,6 +321,12 @@ export default function AdminBackgroundImgPage() {
             Latest Collection
           </Link>
           <Link
+            href="/admin/saree-collection"
+            className="px-4 py-2 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all no-underline"
+          >
+            Saree Collection
+          </Link>
+          <Link
             href="/admin/background-img"
             className="px-4 py-2 rounded-full bg-white/10 text-white font-medium no-underline flex items-center gap-1.5"
           >

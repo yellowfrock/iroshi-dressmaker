@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { siteConfig } from '@/config/site'
 
@@ -12,6 +12,7 @@ export default function Header() {
   const isPortfolio = pathname === '/portfolio'
 
   const [isScrolled, setIsScrolled] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
 
   // Scroll detection for home page transparent header transition
   useEffect(() => {
@@ -40,13 +41,69 @@ export default function Header() {
     }
   }, [isHome])
 
+  // Automatically close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
+  // Lock page scrolling while mobile menu is open
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [mobileMenuOpen])
+
+  // Handle Escape key, outside clicks, and resize to desktop
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [mobileMenuOpen])
+
   // The mobile menu page uses its own full-bleed layout
   if (pathname === '/menu') return null
 
-  const isHomeTransparent = isHome && !isScrolled
-  const showTransparent = isHomeTransparent && !mobileMenuOpen
+  const isHomeTransparent = isHome && !isScrolled && !mobileMenuOpen
+  const showTransparent = isHomeTransparent
   const waNumber = siteConfig.placeholders.whatsappNumber || '94769750186'
   const waUrl = `https://wa.me/${waNumber}`
+
+  const navLinks = [
+    { href: '/', label: 'HOME', isActive: pathname === '/' },
+    { href: '/portfolio', label: 'OUR PORTFOLIO', isActive: pathname.startsWith('/portfolio') },
+    { href: '/saree-collection', label: 'SAREE COLLECTION', isActive: pathname.startsWith('/saree-collection') },
+    { href: '/rental', label: 'RENTAL COLLECTION', isActive: pathname.startsWith('/rental') },
+    { href: '/about', label: 'ABOUT ATELIER', isActive: pathname === '/about' },
+  ]
 
   const handleResetToStart = () => {
     if (isHome) {
@@ -56,7 +113,8 @@ export default function Header() {
 
   return (
     <header
-      className={`z-50 w-full select-none transition-all duration-300 ${
+      ref={headerRef}
+      className={`z-50 w-full select-none relative transition-all duration-300 ${
         isHome
           ? `fixed top-0 left-0 right-0 ${
               showTransparent
@@ -120,7 +178,7 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <nav
-          className={`hidden md:flex items-center uppercase tracking-wider font-mono transition-all duration-300 ${
+          className={`hidden lg:flex items-center uppercase tracking-wider font-mono transition-all duration-300 ${
             isHomeTransparent
               ? 'gap-5 lg:gap-7 text-sm'
               : 'gap-6 lg:gap-8 text-xs'
@@ -204,7 +262,7 @@ export default function Header() {
         </nav>
 
         {/* Mobile Actions */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-2">
           <a
             href={waUrl}
             target="_blank"
@@ -218,113 +276,82 @@ export default function Header() {
 
           <button
             type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-dropdown-menu"
             className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 border border-white/15 text-white transition-all cursor-pointer"
           >
             {mobileMenuOpen ? (
-              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
+              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="17" x2="20" y2="17" />
               </svg>
             )}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden bg-[#050505]/95 backdrop-blur-xl flex flex-col justify-between p-6 overflow-y-auto">
-          <div className="flex justify-between items-center border-b border-white/10 pb-5">
-            <div className="flex flex-col">
-              <span className="font-serif italic text-2xl font-bold text-white">#iroshi</span>
-              <span className="font-mono text-[0.6rem] tracking-widest text-[#F4D389] uppercase">
-                dressmaker
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-label="Close menu"
-              className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer border border-white/15"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
+      {/* Mobile Backdrop Overlay */}
+      <div
+        className={`fixed inset-x-0 bottom-0 top-20 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-[250ms] ease-out ${
+          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
+        onPointerDown={() => setMobileMenuOpen(false)}
+        aria-hidden="true"
+      />
 
-          <nav className="flex flex-col gap-2 my-8">
+      {/* Mobile Dropdown Menu Panel */}
+      <div
+        id="mobile-dropdown-menu"
+        aria-hidden={!mobileMenuOpen}
+        className={`absolute top-full left-0 right-0 z-50 lg:hidden bg-[#050505]/95 backdrop-blur-xl border-b border-white/10 shadow-2xl transition-all duration-[250ms] ease-out ${
+          mobileMenuOpen
+            ? 'max-h-[calc(100vh-5rem)] opacity-100 translate-y-0 pointer-events-auto overflow-y-auto'
+            : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none overflow-hidden'
+        }`}
+      >
+        <nav className="flex flex-col font-mono text-xs uppercase tracking-wider py-2">
+          {navLinks.map((link) => (
             <Link
-              href="/"
+              key={link.href}
+              href={link.href}
               onClick={() => {
-                handleResetToStart()
+                if (link.href === '/') handleResetToStart()
                 setMobileMenuOpen(false)
               }}
-              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
+              className={`w-full min-h-[48px] px-6 py-3.5 flex items-center justify-between border-b border-white/5 transition-colors no-underline ${
+                link.isActive
+                  ? 'text-[#F4D389] font-medium bg-white/[0.03]'
+                  : 'text-[#e5e5e5]/80 hover:text-white hover:bg-white/[0.02]'
+              }`}
             >
-              <span>Home</span>
-              <span className="opacity-40">→</span>
+              <span>{link.label}</span>
+              {link.isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F4D389]" aria-hidden="true" />
+              )}
             </Link>
-            <Link
-              href="/portfolio"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-[#F4D389] hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-            >
-              <span>Our Portfolio</span>
-              <span className="opacity-40">→</span>
-            </Link>
-            <Link
-              href="/saree-collection"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-            >
-              <span>Saree Collection</span>
-              <span className="opacity-40">→</span>
-            </Link>
-            <Link
-              href="/rental"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-            >
-              <span>Rental Collection</span>
-              <span className="opacity-40">→</span>
-            </Link>
-            <Link
-              href="/about"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-4 px-4 rounded-xl text-left text-lg font-medium text-white hover:bg-white/5 border-b border-white/5 transition-colors no-underline"
-            >
-              <span>About Atelier</span>
-              <span className="opacity-40">→</span>
-            </Link>
-          </nav>
-
-          <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
+          ))}
+          <div className="p-4 sm:p-5">
             <a
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full min-h-[48px] py-3.5 px-6 rounded-full bg-[#D81B2B] hover:bg-[#BF1524] text-white font-medium text-center text-sm tracking-wide shadow-lg flex items-center justify-center gap-2 no-underline"
+              onClick={() => setMobileMenuOpen(false)}
+              className="appointment-btn w-full min-h-[48px] py-3.5 px-6 !flex items-center justify-center font-mono text-xs uppercase tracking-wider text-center cursor-pointer no-underline"
             >
               <span>Make an Appointment</span>
             </a>
-            <a
-              href="tel:+94769750186"
-              className="w-full min-h-[44px] py-2 px-6 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 font-mono text-center text-xs tracking-wider flex items-center justify-center gap-2 no-underline"
-            >
-              <span>+94 76 975 0186</span>
-            </a>
           </div>
-        </div>
-      )}
+        </nav>
+      </div>
     </header>
   )
 }

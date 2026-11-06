@@ -155,7 +155,7 @@ export async function updateCollectionItem(
   if (input.title !== undefined) updatePayload.title = input.title.trim()
   if (input.subtitle_badge !== undefined) updatePayload.subtitle_badge = input.subtitle_badge?.trim() || null
   if (input.description !== undefined) updatePayload.description = input.description?.trim() || null
-  if (input.image_url !== undefined) updatePayload.image_url = input.image_url.trim()
+  if (input.image_url !== undefined) updatePayload.image_url = input.image_url ? input.image_url.trim() : null
   if (input.image_path !== undefined) updatePayload.image_path = input.image_path?.trim() || null
   if (input.detail_url !== undefined) updatePayload.detail_url = input.detail_url?.trim() || null
   if (input.sort_order !== undefined) updatePayload.sort_order = input.sort_order
@@ -327,4 +327,46 @@ export async function uploadCollectionImageAction(
   } = adminClient.storage.from('collection-images').getPublicUrl(imagePath)
 
   return { publicUrl, imagePath }
+}
+
+/**
+ * Remove an image from a collection item without deleting the card itself.
+ * Sets image_url to null and image_path to null, and deletes the storage file if present.
+ */
+export async function removeCollectionItemImage(
+  type: CollectionType,
+  id: string
+): Promise<CollectionItem> {
+  await assertAdmin()
+  const adminClient = await createAdminClient()
+  const tableName = getTableName(type)
+
+  const { data: existing } = await adminClient
+    .from(tableName)
+    .select('image_path')
+    .eq('id', id)
+    .single()
+
+  if (existing?.image_path) {
+    try {
+      await adminClient.storage.from('collection-images').remove([existing.image_path])
+    } catch (err) {
+      console.warn(`[removeCollectionItemImage] Storage file cleanup note:`, err)
+    }
+  }
+
+  const { data, error } = await adminClient
+    .from(tableName)
+    .update({ image_url: null, image_path: null })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error(`[removeCollectionItemImage] Error clearing image in ${tableName}:`, error.message)
+    throw new Error(error.message)
+  }
+
+  revalidateAllCollectionPages()
+  return data as CollectionItem
 }

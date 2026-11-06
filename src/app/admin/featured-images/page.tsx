@@ -380,6 +380,18 @@ export default function AdminFeaturedImagesPage() {
             Latest Collection
           </Link>
           <Link
+            href="/admin/saree-collection"
+            className="px-4 py-2 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all no-underline"
+          >
+            Saree Collection
+          </Link>
+          <Link
+            href="/admin/background-img"
+            className="px-4 py-2 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all no-underline"
+          >
+            Background Img
+          </Link>
+          <Link
             href="/admin/settings"
             className="px-4 py-2 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all no-underline"
           >
