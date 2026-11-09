@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation'
 import { getDressByCode, getSiteSettings, getAllDressCodes } from '@/lib/supabase/queries'
 import { sampleDresses } from '@/lib/data/sample-dresses'
 import DressGallery from '@/components/dresses/DressGallery'
-import DressCard from '@/components/dresses/DressCard'
 import { siteConfig } from '@/config/site'
 import { getDressEnquiryWhatsAppUrl, getRentalBookingWhatsAppUrl } from '@/lib/whatsapp'
 
@@ -91,11 +90,6 @@ export default async function DressDetailPage({ params }: PageProps) {
       `https://wa.me/${effectiveWhatsAppNumber}`
     : getDressEnquiryWhatsAppUrl(effectiveWhatsAppNumber, dress.dress_code, dress.name, primaryImageUrl, false) ||
       `https://wa.me/${effectiveWhatsAppNumber}`
-
-  // Related dresses
-  const relatedDresses = sampleDresses
-    .filter((d) => d.dress_code !== dress.dress_code && d.category?.slug === categorySlug)
-    .slice(0, 3)
 
   return (
     <div className="relative min-h-screen bg-[#050505] text-[#e5e5e5] font-sans selection:bg-[#ff4d4d] selection:text-white pb-24 overflow-x-hidden">
@@ -226,34 +220,6 @@ export default async function DressDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Related Dresses Carousel */}
-        {relatedDresses.length > 0 && (
-          <div className="mt-24 pt-16 border-t border-white/10">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#F4D389] block mb-1">
-                  More From This Collection
-                </span>
-                <h3 className="font-serif italic text-2xl sm:text-3xl text-white font-medium">
-                  Related Silhouettes
-                </h3>
-              </div>
-
-              <Link
-                href={`/${categorySlug}`}
-                className="font-mono text-xs text-white/60 hover:text-white transition-colors no-underline"
-              >
-                View Full Collection →
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {relatedDresses.map((rel) => (
-                <DressCard key={rel.id} dress={rel} whatsappNumber={whatsappNumber} />
-              ))}
-            </div>
-          </div>
-        )}
       </section>
     </div>
   )
