@@ -5,14 +5,19 @@ import { sampleDresses } from '@/lib/data/sample-dresses'
 import { siteConfig } from '@/config/site'
 
 export const metadata: Metadata = {
-  title: 'The Sequence | Iroshi Dressmaker — Haute Couture & Rental Collection',
+  title: {
+    absolute: 'Iroshi Dressmaker',
+  },
   description:
     'Discover the artistry, craftsmanship and unique designs behind Iroshi Dressmaker across a scroll-driven 300-frame sequence.',
   openGraph: {
-    title: 'The Sequence | Iroshi Dressmaker',
+    title: 'Iroshi Dressmaker',
     description:
       'Discover the artistry, craftsmanship and unique designs behind Iroshi Dressmaker across a scroll-driven 300-frame sequence.',
     images: ['https://res.cloudinary.com/ecyvwovp/image/upload/v1788533136/tag_ppng.png'],
+  },
+  twitter: {
+    title: 'Iroshi Dressmaker',
   },
 }
 
